@@ -1,0 +1,67 @@
+MoM v1.03.01
+MoM CP v1.60.00
+CoM 6.08
+CoM2 1.05.11
+
+Normal non-hero:
+Invulnerability
+Lionheart
+Holy Armor
+Endurance
+Bless
+Discipline
+(Heroism)
+
+Normal hero:
+Invulnerability
+Lionheart
+Holy Armor
+Endurance
+Bless
+(Heroism)
+
+Fantastic:
+Invulnerability
+Lionheart
+Endurance
+Bless
+
+
+
+Cracks call
+Spell blast
+Magic vortex
+Dispel magic
+Heroic heart
+Disenchant area
+Plane shift
+Disjunction
+Create artifact
+Spell of mastery
+
+Construct catapult
+Cockatrices
+Great lizard
+Summon hero
+Summon Champion
+
+Survival instinct
+Call lightning
+Herb mastery
+Mass invisibility
+Time stop
+Fate mastery
+Clairvoyance
+Reinforce magic
+
+Spell ward
+Abundance
+Philosopher's stone
+
+Elemental armor
+Mind storm
+Flight
+Invisibility
+
+Petrify
+Lightning bolt

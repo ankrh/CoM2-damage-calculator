@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:masterofmagic.fandom.com)",
+      "WebFetch(domain:www.gog.com)",
+      "WebSearch",
+      "WebFetch(domain:steamcommunity.com)",
+      "Bash(\"C:/Users/ander/AppData/Local/Python/bin/python.exe\" \"c:/CoM2-damage-calculator/tools/htm_to_md.py\" --all \"c:/CoM2-damage-calculator/CoM1 or MoM material/Fandom site/\")",
+      "Bash(wc -l \"c:/CoM2-damage-calculator/CoM1 or MoM material/Fandom site\"/*.md)"
+    ]
+  }
+}
