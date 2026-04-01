@@ -1,3 +1,9 @@
 # Saved web pages (htm files and their associated asset folders)
 *.htm
 *_files/
+
+# Official MoM game files
+CoM1 or MoM material/Master of Magic Official Release/
+
+# Playwright MCP logs
+.playwright-mcp/

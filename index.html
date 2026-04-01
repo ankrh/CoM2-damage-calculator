@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MoM Damage Calculator</title>
+<style>
+  :root {
+    --bg: #1a1a2e;
+    --panel: #16213e;
+    --border: #0f3460;
+    --accent: #e94560;
+    --text: #eee;
+    --muted: #999;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; scrollbar-color: var(--border) transparent; }
+  *::-webkit-scrollbar { width: 6px; }
+  *::-webkit-scrollbar-track { background: transparent; }
+  *::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 1.5rem;
+  }
+  h1 {
+    text-align: center;
+    margin-bottom: 0.25rem;
+    font-size: 1.5rem;
+  }
+  .version-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 0.5rem 0 0.25rem;
+  }
+  .version-bar label {
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+  .version-bar select {
+    padding: 0.35rem 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 0.9rem;
+  }
+  .subtitle {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85rem;
+    margin-bottom: 1.5rem;
+  }
+
+  /* --- Input Panels --- */
+  .panels {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+  }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem;
+    min-width: 300px;
+    flex: 0 1 340px;
+  }
+  .panel h2 {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+  .unit-select {
+    font-size: 0.8rem;
+    padding: 0.25rem 0.4rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--bg);
+    color: var(--text);
+    max-width: 180px;
+  }
+  .panel-fields.locked input,
+  .panel-fields.locked select {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  .panel-fields {
+    display: grid;
+    grid-template-columns: auto 1fr 62px;
+    align-items: center;
+    row-gap: 0.65rem;
+    column-gap: 0.5rem;
+  }
+  .panel-fields label {
+    font-size: 0.9rem;
+    white-space: nowrap;
+    grid-column: 1;
+  }
+  .panel-fields input, .panel-fields select {
+    padding: 0.35rem 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 0.9rem;
+    text-align: center;
+  }
+  /* standalone input: skip col 2, land in col 3 */
+  .panel-fields > input[type="number"] {
+    grid-column: 3;
+  }
+  /* standalone select: span cols 2-3 */
+  .panel-fields > select {
+    grid-column: 2 / 4;
+    text-align: left;
+  }
+  /* dropdown + input combos */
+  .panel-fields > select.mid {
+    grid-column: 2;
+    text-align: left;
+  }
+  /* "30 +" prefix text in col 2, right-aligned */
+  .prefix {
+    grid-column: 2;
+    text-align: right;
+    color: var(--muted);
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+  /* "%" suffix overlaps after col 3 */
+  .suffix {
+    color: var(--muted);
+    font-size: 0.8rem;
+    margin-left: -0.3rem;
+  }
+  /* --- Presets Sidebar --- */
+  .page-layout {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    align-items: flex-start;
+  }
+  .presets {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+    min-width: 180px;
+    max-width: 200px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 1.5rem;
+    max-height: calc(100vh - 3rem);
+    overflow-y: auto;
+  }
+  .presets h2 {
+    font-size: 0.9rem;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .presets button {
+    display: block;
+    width: 100%;
+    padding: 0.45rem 0.6rem;
+    margin-bottom: 0.4rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 0.78rem;
+    text-align: left;
+    cursor: pointer;
+    line-height: 1.3;
+  }
+  .presets button:hover {
+    background: var(--border);
+  }
+  .main-content {
+    flex: 1;
+    min-width: 0;
+  }
+  /* --- Common Fields --- */
+  .common-fields {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .common-fields label {
+    font-size: 0.9rem;
+    white-space: nowrap;
+    margin-left: 1rem;
+  }
+  .common-fields label:first-child {
+    margin-left: 0;
+  }
+  .common-fields input, .common-fields select {
+    padding: 0.35rem 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 0.9rem;
+    text-align: center;
+  }
+  .common-fields input { width: 62px; }
+  .common-fields select { text-align: left; }
+  .check-label {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+  .check-label input[type="checkbox"] { margin: 0; cursor: pointer; }
+  .disabled-field { opacity: 0.3; pointer-events: none; }
+  /* --- Results --- */
+  .results {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .dist-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    flex: 0 1 340px;
+    min-width: 300px;
+  }
+  .dist-header {
+    font-size: 1rem;
+    font-weight: bold;
+    margin-bottom: 0.75rem;
+    text-align: center;
+  }
+  .dist-header .avg {
+    color: var(--accent);
+  }
+  .dist-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+  .dist-table th {
+    color: var(--muted);
+    font-weight: normal;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+    padding: 0.3rem 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .dist-table th:first-child { text-align: left; }
+  .dist-table th:last-child { text-align: right; }
+  .dist-table td {
+    padding: 0.2rem 0.5rem;
+    border: none;
+  }
+  .dist-table tr { border-bottom: 1px solid rgba(15, 52, 96, 0.4); }
+  .dist-table .dmg-cell {
+    text-align: left;
+    font-weight: bold;
+    width: 50px;
+  }
+  .dist-table .chance-cell {
+    position: relative;
+    text-align: right;
+    padding-right: 0.5rem;
+  }
+  .chance-bar {
+    position: absolute;
+    left: 0;
+    top: 1px;
+    bottom: 1px;
+    border-radius: 2px;
+    opacity: 0.3;
+  }
+  .chance-text {
+    position: relative;
+    z-index: 1;
+  }
+  .dist-table .peak .chance-text {
+    font-weight: bold;
+    color: #fff;
+  }
+  .dist-scroll {
+    max-height: 460px;
+    overflow-y: auto;
+  }
+</style>
+</head>
+<body>
+
+<h1>Master/Caster of Magic &mdash; Damage Calculator</h1>
+<div class="version-bar">
+  <label for="gameVersion">Game Version:</label>
+  <select id="gameVersion">
+    <option value="mom_1.03.01" selected>MoM v1.03.01</option>
+    <option value="mom_cp_1.60.00">MoM CP v1.60.00</option>
+    <option value="com_6.08">CoM 6.08</option>
+    <option value="com2_1.05.11">CoM2 1.05.11</option>
+  </select>
+</div>
+
+<div class="page-layout">
+
+<div class="presets">
+  <h2>Test Cases</h2>
+  <div id="presetButtons"></div>
+</div>
+
+<div class="main-content">
+<div class="panels">
+  <div class="panel">
+    <h2><span>Attacker</span><select id="aUnit" class="unit-select"><option value="custom">Custom</option></select></h2>
+    <div class="panel-fields">
+      <label>Figures</label>
+      <input type="number" id="aFigs" min="1" max="9" value="4">
+
+      <label>Attack</label>
+      <input type="number" id="aAtk" min="0" max="50" value="3">
+
+      <label>Ranged</label>
+      <select class="mid" id="aRangedType">
+        <option value="none" selected>None</option>
+        <option value="missile">Missile</option>
+        <option value="rock">Rock</option>
+        <option value="magic_c">Magic (C)</option>
+        <option value="magic_n">Magic (N)</option>
+        <option value="magic_s">Magic (S)</option>
+      </select>
+      <input type="number" id="aRanged" min="0" max="50" value="0">
+
+      <label>Defense</label>
+      <input type="number" id="aDef" min="0" max="50" value="2">
+
+      <label>Resistance</label>
+      <input type="number" id="aRes" min="0" max="50" value="5">
+
+      <label>Base To Hit</label>
+      <span class="prefix">30% +</span>
+      <input type="number" id="aToHitMod" min="-20" max="70" value="0">
+
+      <label>Thrown/Breath</label>
+      <select class="mid" id="aThrownType">
+        <option value="none" selected>None</option>
+        <option value="thrown">Thrown</option>
+        <option value="fire">Fire</option>
+        <option value="lightning">Lightning</option>
+      </select>
+      <input type="number" id="aThrown" min="0" max="50" value="0">
+
+      <label>To Block</label>
+      <span class="prefix">30% +</span>
+      <input type="number" id="aToBlkMod" min="-20" max="70" value="0">
+
+      <label>Hit Points</label>
+      <input type="number" id="aHP" min="1" max="99" value="1">
+
+      <label>Damage Taken</label>
+      <input type="number" id="aDmg" min="0" max="999" value="0">
+
+      <label>Weapon Type</label>
+      <select id="aWeapon">
+        <option value="normal" selected>Normal</option>
+        <option value="magic">Magic</option>
+        <option value="mithril">Mithril</option>
+        <option value="adamantium">Adamantium</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2><span>Defender</span><select id="bUnit" class="unit-select"><option value="custom">Custom</option></select></h2>
+    <div class="panel-fields">
+      <label>Figures</label>
+      <input type="number" id="bFigs" min="1" max="9" value="4">
+
+      <label>Attack</label>
+      <input type="number" id="bAtk" min="0" max="50" value="3">
+
+      <label>Ranged</label>
+      <select class="mid" id="bRangedType">
+        <option value="none" selected>None</option>
+        <option value="missile">Missile</option>
+        <option value="rock">Rock</option>
+        <option value="magic_c">Magic (C)</option>
+        <option value="magic_n">Magic (N)</option>
+        <option value="magic_s">Magic (S)</option>
+      </select>
+      <input type="number" id="bRanged" min="0" max="50" value="0">
+
+      <label>Defense</label>
+      <input type="number" id="bDef" min="0" max="50" value="2">
+
+      <label>Resistance</label>
+      <input type="number" id="bRes" min="0" max="50" value="5">
+
+      <label>Base To Hit</label>
+      <span class="prefix">30% +</span>
+      <input type="number" id="bToHitMod" min="-20" max="70" value="0">
+
+      <label>Thrown/Breath</label>
+      <select class="mid" id="bThrownType">
+        <option value="none" selected>None</option>
+        <option value="thrown">Thrown</option>
+        <option value="fire">Fire</option>
+        <option value="lightning">Lightning</option>
+      </select>
+      <input type="number" id="bThrown" min="0" max="50" value="0">
+
+      <label>To Block</label>
+      <span class="prefix">30% +</span>
+      <input type="number" id="bToBlkMod" min="-20" max="70" value="0">
+
+      <label>Hit Points</label>
+      <input type="number" id="bHP" min="1" max="99" value="1">
+
+      <label>Damage Taken</label>
+      <input type="number" id="bDmg" min="0" max="999" value="0">
+
+      <label>Weapon Type</label>
+      <select id="bWeapon">
+        <option value="normal" selected>Normal</option>
+        <option value="magic">Magic</option>
+        <option value="mithril">Mithril</option>
+        <option value="adamantium">Adamantium</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<div class="common-fields">
+  <label id="rangedCheckLabel" class="check-label">
+    Ranged attack <input type="checkbox" id="rangedCheck" checked>
+  </label>
+  <label id="rangedDistLabel">Ranged attack distance:</label>
+  <input type="number" id="rangedDist" min="1" max="99" value="1">
+  <label>Node aura:</label>
+  <select id="nodeAura">
+    <option value="none" selected>None</option>
+    <option value="chaos">Chaos</option>
+    <option value="nature">Nature</option>
+    <option value="sorcery">Sorcery</option>
+  </select>
+</div>
+
+<div class="results" id="results">
+  <div class="dist-panel" id="distA"></div>
+  <div class="dist-panel" id="distB"></div>
+</div>
+
+</div><!-- /main-content -->
+</div><!-- /page-layout -->
+
+<script>
+// --- Unit Database ---
+
+const RACE_NAMES = {
+  0: 'Barbarian', 1: 'High Men', 2: 'Dark Elf', 3: 'Draconian', 4: 'Dwarf',
+  5: 'Gnoll', 6: 'Halfling', 7: 'High Elf', 8: 'Nomad', 9: 'Lizardman',
+  10: 'Troll', 11: 'Beastmen', 12: 'Orc', 13: 'Klackon', 14: 'Special',
+  15: 'Arcane', 16: 'Nature', 17: 'Sorcery', 18: 'Chaos', 19: 'Life', 20: 'Death',
+};
+
+// RangedType ID -> calculator ranged type
+const RANGED_TYPE_MAP = {
+  10: 'rock',    // boulder
+  11: 'rock',    // cannon
+  20: 'missile',
+  21: 'missile', // sling
+  30: 'magic_c', // chaos — lightning bolt (Warlock hero, Chaos Warrior hero, Storm Giant)
+  31: 'magic_c', // chaos — fire bolt (Magicians, Warlocks, Golden One hero, Witch hero, etc., Efreet)
+  32: 'magic_s', // sorcery — ice bolt (Wind Mage hero, Djinn); also illusion ball (Sage hero, Illusionist hero)
+  33: 'magic_c', // chaos — death bolt (Necromancer hero, Shadow Demons, Demon Lord, Ghouls)
+  34: 'magic_s', // sorcery (Water Elemental)
+  35: 'magic_n', // nature — priest sparkles (Healer hero, Priestess hero, Priests, Shamans)
+  36: 'magic_c', // chaos — drow sparkles (Dark Elf units, Nightmares)
+  37: 'magic_n', // nature — sprite shimmer (Sprites)
+  38: 'magic_n', // nature — green bolt (Druid hero, Elven Archer hero)
+};
+
+// Parsed unit databases per version. Loaded on demand.
+const unitDatabases = {};
+
+function parseUnitsINI(text) {
+  const units = [];
+  let current = null;
+  for (const rawLine of text.split('\n')) {
+    const line = rawLine.trim();
+    if (!line) continue;
+    const secMatch = line.match(/^\[(\d+)\]$/);
+    if (secMatch) {
+      if (current) units.push(current);
+      current = { index: parseInt(secMatch[1]) };
+      continue;
+    }
+    if (!current) continue;
+    const eqIdx = line.indexOf('=');
+    if (eqIdx < 0) continue;
+    const key = line.substring(0, eqIdx).trim();
+    const val = line.substring(eqIdx + 1).trim();
+    current[key] = val;
+  }
+  if (current) units.push(current);
+  return units;
+}
+
+function iniUnitToCalcStats(u) {
+  const atk = parseInt(u.Attack) || 0;
+  const def = parseInt(u.Defense) || 0;
+  const res = parseInt(u.Resistance) || 0;
+  const hp = parseInt(u.HP) || 1;
+  const figs = parseInt(u.Figures) || 1;
+  const hit = parseInt(u.Hit) || 30;
+  const toHitMod = hit - 30;
+
+  // Ranged
+  let rangedType = 'none';
+  let ranged = 0;
+  if (u.Ranged && parseInt(u.Ranged) > 0) {
+    ranged = parseInt(u.Ranged);
+    const rt = parseInt(u.RangedType) || 20;
+    rangedType = RANGED_TYPE_MAP[rt] || 'missile';
+  }
+
+  // Thrown / Breath
+  let thrownType = 'none';
+  let thrown = 0;
+  if (u.Thrown && parseInt(u.Thrown) > 0) {
+    thrownType = 'thrown';
+    thrown = parseInt(u.Thrown);
+  } else if (u.FireBreath && parseInt(u.FireBreath) > 0) {
+    thrownType = 'fire';
+    thrown = parseInt(u.FireBreath);
+  } else if (u.LightningBreath && parseInt(u.LightningBreath) > 0) {
+    thrownType = 'lightning';
+    thrown = parseInt(u.LightningBreath);
+  }
+
+  return {
+    figs, atk, def, res, hp, toHitMod, toBlkMod: 0, dmg: 0,
+    rangedType, ranged, thrownType, thrown, weapon: 'normal',
+  };
+}
+
+function getUnitDisplayName(u) {
+  const name = u.Name || 'Unknown';
+  const race = parseInt(u.Race);
+  if (u.DisplayRace === 'Yes' && RACE_NAMES[race] && RACE_NAMES[race] !== 'Special') {
+    return RACE_NAMES[race] + ' ' + name;
+  }
+  return name;
+}
+
+function getUnitCategory(u) {
+  const idx = u.index;
+  if (u.HeroType) return 'Heroes';
+  if (idx >= 35 && idx <= 39) return 'Ships & Siege';
+  const race = parseInt(u.Race);
+  if (race >= 15) {  // fantastic creatures
+    const realm = { 15: 'Arcane', 16: 'Nature', 17: 'Sorcery', 18: 'Chaos', 19: 'Life', 20: 'Death' };
+    return (realm[race] || 'Fantastic') + ' Creatures';
+  }
+  if (u.DisplayRace === 'Yes' && RACE_NAMES[race]) return RACE_NAMES[race];
+  return 'Other';
+}
+
+async function loadUnitDatabase(version) {
+  if (unitDatabases[version]) return unitDatabases[version];
+
+  const filePaths = {
+    'com2_1.05.11': 'CoM2 material/UNITS.INI',
+  };
+  const path = filePaths[version];
+  if (!path) {
+    unitDatabases[version] = [];
+    return [];
+  }
+
+  try {
+    const resp = await fetch(path);
+    if (!resp.ok) throw new Error(resp.statusText);
+    const text = await resp.text();
+    const units = parseUnitsINI(text);
+    unitDatabases[version] = units;
+    return units;
+  } catch (e) {
+    console.warn('Could not load unit database for ' + version + ':', e);
+    unitDatabases[version] = [];
+    return [];
+  }
+}
+
+function populateUnitDropdown(selectId, units) {
+  const sel = document.getElementById(selectId);
+  const oldVal = sel.value;
+
+  // Clear all except Custom
+  while (sel.options.length > 1) sel.remove(1);
+
+  if (units.length === 0) return;
+
+  // Group by category
+  const groups = {};
+  for (const u of units) {
+    const cat = getUnitCategory(u);
+    if (!groups[cat]) groups[cat] = [];
+    groups[cat].push(u);
+  }
+
+  // Desired category order
+  const raceOrder = [
+    'Barbarian', 'Beastmen', 'Dark Elf', 'Draconian', 'Dwarf', 'Gnoll',
+    'Halfling', 'High Elf', 'High Men', 'Klackon', 'Lizardman', 'Nomad',
+    'Orc', 'Troll',
+  ];
+  const categoryOrder = [
+    'Heroes', 'Ships & Siege',
+    ...raceOrder,
+    'Other',
+    'Arcane Creatures', 'Nature Creatures', 'Sorcery Creatures',
+    'Chaos Creatures', 'Life Creatures', 'Death Creatures',
+  ];
+
+  for (const cat of categoryOrder) {
+    if (!groups[cat]) continue;
+    const optgroup = document.createElement('optgroup');
+    optgroup.label = cat;
+    for (const u of groups[cat]) {
+      const opt = document.createElement('option');
+      opt.value = String(u.index);
+      opt.textContent = getUnitDisplayName(u);
+      optgroup.appendChild(opt);
+    }
+    sel.appendChild(optgroup);
+  }
+
+  // Restore selection if it still exists, otherwise reset to custom
+  if ([...sel.options].some(o => o.value === oldVal)) {
+    sel.value = oldVal;
+  } else {
+    sel.value = 'custom';
+  }
+}
+
+function applyUnit(prefix, unitIndex) {
+  const version = document.getElementById('gameVersion').value;
+  const units = unitDatabases[version] || [];
+  const unit = units.find(u => u.index === unitIndex);
+  if (!unit) return;
+
+  const stats = iniUnitToCalcStats(unit);
+  document.getElementById(prefix + 'Figs').value = stats.figs;
+  document.getElementById(prefix + 'Atk').value = stats.atk;
+  document.getElementById(prefix + 'Def').value = stats.def;
+  document.getElementById(prefix + 'Res').value = stats.res;
+  document.getElementById(prefix + 'ToHitMod').value = stats.toHitMod;
+  document.getElementById(prefix + 'ToBlkMod').value = stats.toBlkMod;
+  document.getElementById(prefix + 'HP').value = stats.hp;
+  document.getElementById(prefix + 'Dmg').value = stats.dmg;
+  document.getElementById(prefix + 'RangedType').value = stats.rangedType;
+  document.getElementById(prefix + 'Ranged').value = stats.ranged;
+  document.getElementById(prefix + 'ThrownType').value = stats.thrownType;
+  document.getElementById(prefix + 'Thrown').value = stats.thrown;
+  document.getElementById(prefix + 'Weapon').value = stats.weapon;
+}
+
+function updateUnitLock(prefix) {
+  const sel = document.getElementById(prefix + 'Unit');
+  const fields = sel.closest('.panel').querySelector('.panel-fields');
+  const isCustom = sel.value === 'custom';
+  fields.classList.toggle('locked', !isCustom);
+
+  if (!isCustom) {
+    applyUnit(prefix, parseInt(sel.value));
+  }
+}
+
+async function onVersionChange() {
+  const version = document.getElementById('gameVersion').value;
+  const units = await loadUnitDatabase(version);
+  populateUnitDropdown('aUnit', units);
+  populateUnitDropdown('bUnit', units);
+  updateUnitLock('a');
+  updateUnitLock('b');
+  updateTypeVisibility();
+  calculate();
+}
+
+document.getElementById('gameVersion').addEventListener('change', onVersionChange);
+document.getElementById('aUnit').addEventListener('change', () => {
+  updateUnitLock('a');
+  updateTypeVisibility();
+  calculate();
+});
+document.getElementById('bUnit').addEventListener('change', () => {
+  updateUnitLock('b');
+  updateTypeVisibility();
+  calculate();
+});
+
+// --- Probability Engine ---
+
+function binomCoeff(n, k) {
+  if (k < 0 || k > n) return 0;
+  if (k === 0 || k === n) return 1;
+  if (k > n - k) k = n - k;
+  let result = 1;
+  for (let i = 0; i < k; i++) result = result * (n - i) / (i + 1);
+  return result;
+}
+
+function binomialPMF(n, p) {
+  const pmf = new Array(n + 1);
+  for (let k = 0; k <= n; k++)
+    pmf[k] = binomCoeff(n, k) * Math.pow(p, k) * Math.pow(1 - p, n - k);
+  return pmf;
+}
+
+function singleAttackDmgDist(atkStr, toHit, defStr, toBlock, hp) {
+  const hitsPMF = binomialPMF(atkStr, toHit);
+  const blocksPMF = binomialPMF(defStr, toBlock);
+
+  const chainDmg = new Array(atkStr + 1);
+  chainDmg[0] = [1];
+
+  for (let e = 1; e <= atkStr; e++) {
+    chainDmg[e] = new Array(e + 1).fill(0);
+    for (let b = 0; b <= defStr; b++) {
+      const net = Math.max(e - b, 0);
+      if (net < hp) {
+        chainDmg[e][net] += blocksPMF[b];
+      } else {
+        const excess = net - hp;
+        const sub = chainDmg[excess];
+        for (let d = 0; d < sub.length; d++) {
+          if (sub[d] < 1e-15) continue;
+          chainDmg[e][hp + d] += blocksPMF[b] * sub[d];
+        }
+      }
+    }
+  }
+
+  const dist = new Array(atkStr + 1).fill(0);
+  for (let h = 0; h <= atkStr; h++) {
+    if (hitsPMF[h] < 1e-15) continue;
+    const sub = chainDmg[h];
+    for (let d = 0; d < sub.length; d++) {
+      if (sub[d] < 1e-15) continue;
+      dist[d] += hitsPMF[h] * sub[d];
+    }
+  }
+  return dist;
+}
+
+function convolveDists(a, b, cap) {
+  const result = new Array(cap + 1).fill(0);
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] < 1e-15) continue;
+    for (let j = 0; j < b.length; j++) {
+      if (b[j] < 1e-15) continue;
+      result[Math.min(i + j, cap)] += a[i] * b[j];
+    }
+  }
+  return result;
+}
+
+function calcTotalDamageDist(atkFigs, atkStr, toHit, defStr, toBlock, hp, cap) {
+  const single = singleAttackDmgDist(atkStr, toHit, defStr, toBlock, hp);
+
+  let result = [1];
+  let base = single;
+  let n = atkFigs;
+  while (n > 0) {
+    if (n & 1) result = convolveDists(result, base, cap);
+    n >>= 1;
+    if (n > 0) base = convolveDists(base, base, cap);
+  }
+  return result;
+}
+
+// --- UI ---
+
+function formatPct(p) {
+  return (p * 100).toFixed(1) + '%';
+}
+
+function renderDistPanel(container, title, dist, totalHP, hp, numFigs) {
+  // Find max non-negligible damage
+  let maxD = dist.length - 1;
+  while (maxD > 0 && dist[maxD] < 1e-10) maxD--;
+
+  // Compute expected damage
+  let expected = 0;
+  for (let d = 0; d < dist.length; d++) expected += d * dist[d];
+
+  // Find peak probability
+  let peakProb = 0;
+  for (let d = 0; d <= maxD; d++) {
+    if ((dist[d] || 0) > peakProb) peakProb = dist[d];
+  }
+
+  // Bar color
+  const barColor = '#e94560';
+
+  let html = `<div class="dist-header">${title}: <span class="avg">${expected.toFixed(3)}</span></div>`;
+  html += '<div class="dist-scroll"><table class="dist-table">';
+  html += '<thead><tr><th>Damage</th><th style="text-align:right">Chance</th></tr></thead><tbody>';
+
+  for (let d = 0; d <= maxD; d++) {
+    const p = dist[d] || 0;
+    const barWidth = peakProb > 0 ? (p / peakProb) * 100 : 0;
+    const isPeak = peakProb > 0 && Math.abs(p - peakProb) < 1e-15;
+    const isKill = d >= totalHP;
+
+    // Figure kill annotation
+    let dmgLabel = '' + d;
+    if (numFigs > 1 && hp > 0 && d > 0 && d % hp === 0) {
+      const kills = d / hp;
+      if (kills === numFigs) dmgLabel += ' ☠';
+    } else if (numFigs === 1 && d >= totalHP) {
+      dmgLabel += ' ☠';
+    }
+
+    html += `<tr class="${isPeak ? 'peak' : ''}">`;
+    html += `<td class="dmg-cell">${dmgLabel}</td>`;
+    html += `<td class="chance-cell">`;
+    html += `<span class="chance-bar" style="width:${barWidth}%;background:${isKill ? '#ff4444' : barColor}"></span>`;
+    html += `<span class="chance-text">${formatPct(p)}</span>`;
+    html += `</td></tr>`;
+  }
+
+  html += '</tbody></table></div>';
+  container.innerHTML = html;
+}
+
+function calculate() {
+  // Clamp a percentage to 10%–100% (MoM rules: always at least 10%, at most 100%)
+  function clampPct(base, mod) {
+    return Math.min(1.0, Math.max(0.1, (base + mod) / 100));
+  }
+
+  // Weapon type bonuses: { atk, def, toHit }
+  // Magical/Mithril/Adamantium: +10% To Hit (melee, missile, boulder only)
+  // Mithril: +1 atk (melee, missile, boulder, thrown), +1 def
+  // Adamantium: +2 atk (same types), +2 def
+  function weaponBonus(type) {
+    switch (type) {
+      case 'magic':      return { atk: 0, def: 0, toHit: 10 };
+      case 'mithril':    return { atk: 1, def: 1, toHit: 10 };
+      case 'adamantium': return { atk: 2, def: 2, toHit: 10 };
+      default:           return { atk: 0, def: 0, toHit: 0 };
+    }
+  }
+
+  // Read attacker stats
+  const aFigs  = Math.max(1, parseInt(document.getElementById('aFigs').value) || 1);
+  const aAtkBase = Math.max(0, parseInt(document.getElementById('aAtk').value) || 0);
+  const aDef   = Math.max(0, parseInt(document.getElementById('aDef').value) || 0);
+  const aRes   = Math.max(0, parseInt(document.getElementById('aRes').value) || 0);
+  const aToHitMod = parseInt(document.getElementById('aToHitMod').value) || 0;
+  const aToBlk = clampPct(30, parseInt(document.getElementById('aToBlkMod').value) || 0);
+  const aHP    = Math.max(1, parseInt(document.getElementById('aHP').value) || 1);
+  const aDmg   = Math.max(0, parseInt(document.getElementById('aDmg').value) || 0);
+  const aRangedType = document.getElementById('aRangedType').value;
+  const aRangedBase = Math.max(0, parseInt(document.getElementById('aRanged').value) || 0);
+  const aThrown = Math.max(0, parseInt(document.getElementById('aThrown').value) || 0);
+  const aWpn   = weaponBonus(document.getElementById('aWeapon').value);
+
+  // Weapon atk bonus applies to: melee, missile, boulder, thrown (NOT magic ranged, breath)
+  // Weapon toHit bonus applies to: melee, missile, boulder (NOT magic ranged, thrown, breath)
+  // Weapon def bonus always applies
+  const aAtk    = aAtkBase > 0 ? aAtkBase + aWpn.atk : 0;
+  const aDefEff = aDef + aWpn.def;
+  const aMeleeToHit = clampPct(30, aToHitMod + aWpn.toHit);
+
+  // Ranged: atk bonus for missile/rock, not magic. ToHit bonus for missile/rock, not magic.
+  const rangedGetsAtkBonus = (aRangedType === 'missile' || aRangedType === 'rock');
+  const aRanged = aRangedBase > 0 ? aRangedBase + (rangedGetsAtkBonus ? aWpn.atk : 0) : 0;
+
+  // Read defender stats
+  const bFigs  = Math.max(1, parseInt(document.getElementById('bFigs').value) || 1);
+  const bAtkBase = Math.max(0, parseInt(document.getElementById('bAtk').value) || 0);
+  const bDef   = Math.max(0, parseInt(document.getElementById('bDef').value) || 0);
+  const bRes   = Math.max(0, parseInt(document.getElementById('bRes').value) || 0);
+  const bToHitMod = parseInt(document.getElementById('bToHitMod').value) || 0;
+  const bToBlk = clampPct(30, parseInt(document.getElementById('bToBlkMod').value) || 0);
+  const bHP    = Math.max(1, parseInt(document.getElementById('bHP').value) || 1);
+  const bDmg   = Math.max(0, parseInt(document.getElementById('bDmg').value) || 0);
+  const bThrown = Math.max(0, parseInt(document.getElementById('bThrown').value) || 0);
+  const bWpn   = weaponBonus(document.getElementById('bWeapon').value);
+
+  // Defender counter-attack is melee: gets both atk and toHit weapon bonuses
+  const bAtk    = bAtkBase > 0 ? bAtkBase + bWpn.atk : 0;
+  const bDefEff = bDef + bWpn.def;
+  const bToHit  = clampPct(30, bToHitMod + bWpn.toHit);
+
+  // Determine if this is a ranged attack
+  const isRanged = document.getElementById('rangedCheck').checked && aRangedType !== 'none' && aRanged > 0;
+
+  // Attack strength: ranged strength if ranged attack, melee otherwise
+  const atkStrength = isRanged ? aRanged : aAtk;
+
+  // To Hit: weapon bonus only for melee, missile, boulder (not magic ranged)
+  let atkToHit;
+  if (isRanged) {
+    const wpnToHitForRanged = rangedGetsAtkBonus ? aWpn.toHit : 0;
+    let distPenalty = 0;
+    if (aRangedType === 'missile' || aRangedType === 'rock') {
+      const dist = Math.max(1, parseInt(document.getElementById('rangedDist').value) || 1);
+      if (dist >= 9) distPenalty = -30;
+      else if (dist >= 6) distPenalty = -20;
+      else if (dist >= 3) distPenalty = -10;
+    }
+    atkToHit = clampPct(30, aToHitMod + wpnToHitForRanged + distPenalty);
+  } else {
+    atkToHit = aMeleeToHit;
+  }
+
+  // Thrown/Breath: attacker-only, melee only, no weapon To Hit bonus
+  // Weapon atk bonus applies to thrown (mithril/adamantium), not to breath
+  const aThrownType = document.getElementById('aThrownType').value;
+  const aThrownBase = Math.max(0, parseInt(document.getElementById('aThrown').value) || 0);
+  const thrownGetsAtkBonus = (aThrownType === 'thrown');
+  const aThrownStr = aThrownBase > 0 ? aThrownBase + (thrownGetsAtkBonus ? aWpn.atk : 0) : 0;
+  const aThrownToHit = clampPct(30, aToHitMod); // no weapon To Hit bonus for thrown/breath
+  const hasThrown = !isRanged && aThrownType !== 'none' && aThrownStr > 0;
+  // Lightning breath is armor piercing: halve defense (round down)
+  const bDefForThrown = aThrownType === 'lightning' ? Math.floor(bDefEff / 2) : bDefEff;
+
+  // Compute alive figures and remaining HP for each unit
+  const aTotalHP = aFigs * aHP;
+  const aAlive   = Math.max(0, aFigs - Math.floor(aDmg / aHP));
+  const aRemHP   = Math.max(0, aTotalHP - aDmg);
+
+  const bTotalHP = bFigs * bHP;
+  const bAlive   = Math.max(0, bFigs - Math.floor(bDmg / bHP));
+  const bRemHP   = Math.max(0, bTotalHP - bDmg);
+
+  if (isRanged) {
+    // Ranged: attacker shoots, no counter-attack, no thrown
+    const dmgToB = aAlive > 0 && bRemHP > 0 && atkStrength > 0
+      ? calcTotalDamageDist(aAlive, atkStrength, atkToHit, bDefEff, bToBlk, bHP, bRemHP)
+      : [1];
+    const dmgToA = [1]; // no counter-attack
+
+    renderDistPanel(document.getElementById('distA'), 'Damage to Attacker (no counter)', dmgToA, aRemHP, aHP, aAlive);
+    renderDistPanel(document.getElementById('distB'), 'Ranged Damage to Defender', dmgToB, bRemHP, bHP, bAlive);
+
+  } else if (hasThrown) {
+    // Melee with thrown/breath: thrown first, then simultaneous melee exchange
+    // Step 1: Thrown damage distribution (all attacker figures throw)
+    const thrownDist = aAlive > 0 && bRemHP > 0
+      ? calcTotalDamageDist(aAlive, aThrownStr, aThrownToHit, bDefForThrown, bToBlk, bHP, bRemHP)
+      : [1];
+
+    // For each possible thrown damage, compute melee and counter-attack
+    const totalDmgToB = new Array(bRemHP + 1).fill(0); // total damage to defender
+    const totalDmgToA = new Array(aRemHP + 1).fill(0); // total damage to attacker
+
+    for (let tDmg = 0; tDmg < thrownDist.length; tDmg++) {
+      if (thrownDist[tDmg] < 1e-15) continue;
+      const pThrown = thrownDist[tDmg];
+
+      // Defender state after thrown damage
+      const bDmgAfter = bDmg + tDmg;
+      const bAliveAfter = Math.max(0, bFigs - Math.floor(bDmgAfter / bHP));
+      const bRemHPAfter = Math.max(0, bRemHP - tDmg);
+
+      // Step 5a: Attacker's melee vs defender (capped at remaining defender HP)
+      const meleeDist = aAlive > 0 && bRemHPAfter > 0 && aAtk > 0
+        ? calcTotalDamageDist(aAlive, aAtk, aMeleeToHit, bDefEff, bToBlk, bHP, bRemHPAfter)
+        : [1];
+
+      // Step 5b: Defender's counter-attack (surviving figures after thrown)
+      const counterDist = bAliveAfter > 0 && aRemHP > 0 && bAtk > 0
+        ? calcTotalDamageDist(bAliveAfter, bAtk, bToHit, aDefEff, aToBlk, aHP, aRemHP)
+        : [1];
+
+      // Combine thrown + melee for total damage to defender
+      for (let mDmg = 0; mDmg < meleeDist.length; mDmg++) {
+        if (meleeDist[mDmg] < 1e-15) continue;
+        const totalD = Math.min(tDmg + mDmg, bRemHP);
+        totalDmgToB[totalD] += pThrown * meleeDist[mDmg];
+      }
+
+      // Counter-attack damage to attacker
+      for (let cDmg = 0; cDmg < counterDist.length; cDmg++) {
+        if (counterDist[cDmg] < 1e-15) continue;
+        totalDmgToA[cDmg] += pThrown * counterDist[cDmg];
+      }
+    }
+
+    renderDistPanel(document.getElementById('distA'), 'Damage to Attacker', totalDmgToA, aRemHP, aHP, aAlive);
+    renderDistPanel(document.getElementById('distB'), 'Damage to Defender (thrown+melee)', totalDmgToB, bRemHP, bHP, bAlive);
+
+  } else {
+    // Pure melee: simultaneous exchange
+    const dmgToB = aAlive > 0 && bRemHP > 0 && aAtk > 0
+      ? calcTotalDamageDist(aAlive, aAtk, aMeleeToHit, bDefEff, bToBlk, bHP, bRemHP)
+      : [1];
+
+    const dmgToA = bAlive > 0 && aRemHP > 0 && bAtk > 0
+      ? calcTotalDamageDist(bAlive, bAtk, bToHit, aDefEff, aToBlk, aHP, aRemHP)
+      : [1];
+
+    renderDistPanel(document.getElementById('distA'), 'Damage to Attacker', dmgToA, aRemHP, aHP, aAlive);
+    renderDistPanel(document.getElementById('distB'), 'Damage to Defender', dmgToB, bRemHP, bHP, bAlive);
+  }
+}
+
+const PRESETS = {
+  pureHit: {
+    desc: 'Pure To-Hit: isolates hit chance with no defense',
+    a: { figs:1, atk:10, def:0, res:5, toHitMod:0, toBlkMod:0, hp:1, dmg:0, rangedType:'none', ranged:0, thrownType:'none', thrown:0, weapon:'normal' },
+    b: { figs:1, atk:0,  def:0, res:5, toHitMod:0, toBlkMod:0, hp:99, dmg:0, rangedType:'none', ranged:0, thrownType:'none', thrown:0, weapon:'normal' },
+    expected: { dmgToA: 0, dmgToB: 3 },
+  },
+  pureBlock: {
+    desc: 'Pure Defense: 1 guaranteed hit meets heavy armor',
+    a: { figs:1, atk:1, def:0, res:5, toHitMod:70, toBlkMod:0, hp:1, dmg:0, rangedType:'none', ranged:0, thrownType:'none', thrown:0, weapon:'normal' },
+    b: { figs:1, atk:0, def:10, res:5, toHitMod:0, toBlkMod:0, hp:99, dmg:0, rangedType:'none', ranged:0, thrownType:'none', thrown:0, weapon:'normal' },
+    expected: { dmgToA: 0, dmgToB: 0.028 },
+  },
+  hitVsBlock: {
+    desc: 'Hit vs Block: equal attack and defense at 50%',
+    a: { figs:1, atk:5, def:0, res:5, toHitMod:20, toBlkMod:0, hp:1, dmg:0, rangedType:'none', ranged:0, thrownType:'none', thrown:0, weapon:'normal' },
+    b: { figs:1, atk:0, def:5, res:5, toHitMod:0, toBlkMod:20, hp:99, dmg:0, rangedType:'none', ranged:0, thrownType:'none', thrown:0, weapon:'normal' },
+    expected: { dmgToA: 0, dmgToB: 0.615 },
+  },
+  overflow: {
+    desc: 'Overflow Chain: strong attack vs low-HP figure triggers overflow defense rolls',
+    a: { figs:1, atk:10, def:2, res:5, toHitMod:0, toBlkMod:0, hp:5, dmg:0, rangedType:'none', ranged:0, thrownType:'none', thrown:0, weapon:'normal' },
+    b: { figs:4, atk:2, def:2, res:5, toHitMod:0, toBlkMod:0, hp:3, dmg:0, rangedType:'none', ranged:0, thrownType:'none', thrown:0, weapon:'normal' },
+    expected: { dmgToA: 1.326, dmgToB: 2.296 },
+  },
+  multiFig: {
+    desc: 'Multi-Figure: 8 attackers each roll independently, convolution combines results',
+    a: { figs:8, atk:3, def:1, res:5, toHitMod:0, toBlkMod:0, hp:1, dmg:0, rangedType:'none', ranged:0, thrownType:'none', thrown:0, weapon:'normal' },
+    b: { figs:8, atk:3, def:1, res:5, toHitMod:0, toBlkMod:0, hp:1, dmg:0, rangedType:'none', ranged:0, thrownType:'none', thrown:0, weapon:'normal' },
+    expected: { dmgToA: 5.124, dmgToB: 5.124 },
+  },
+  highHP: {
+    desc: 'High HP Tank: many small attacks vs one tough unit',
+    a: { figs:6, atk:5, def:2, res:5, toHitMod:0, toBlkMod:0, hp:1, dmg:0, rangedType:'none', ranged:0, thrownType:'none', thrown:0, weapon:'normal' },
+    b: { figs:1, atk:8, def:5, res:10, toHitMod:0, toBlkMod:0, hp:25, dmg:0, rangedType:'none', ranged:0, thrownType:'none', thrown:0, weapon:'normal' },
+    expected: { dmgToA: 1.396, dmgToB: 3.347 },
+  },
+  wounded: {
+    desc: 'Wounded Unit: pre-existing damage means fewer alive figures and less total HP',
+    a: { figs:4, atk:4, def:3, res:5, toHitMod:0, toBlkMod:0, hp:5, dmg:0, rangedType:'none', ranged:0, thrownType:'none', thrown:0, weapon:'normal' },
+    b: { figs:4, atk:4, def:3, res:5, toHitMod:0, toBlkMod:0, hp:5, dmg:12, rangedType:'none', ranged:0, thrownType:'none', thrown:0, weapon:'normal' },
+    expected: { dmgToA: 1.247, dmgToB: 2.491 },
+  },
+  oneVsMany: {
+    desc: '1 vs Many: single powerful figure vs swarm — overflow chains through multiple figures',
+    a: { figs:1, atk:20, def:5, res:10, toHitMod:20, toBlkMod:0, hp:15, dmg:0, rangedType:'none', ranged:0, thrownType:'none', thrown:0, weapon:'normal' },
+    b: { figs:6, atk:1,  def:2, res:5,  toHitMod:0,  toBlkMod:0, hp:1,  dmg:0, rangedType:'none', ranged:0, thrownType:'none', thrown:0, weapon:'normal' },
+    expected: { dmgToA: 0.303, dmgToB: 5.389 },
+  },
+  lowOdds: {
+    desc: 'Low Odds: minimal hit chance against heavy defense — near-certain 0 damage',
+    a: { figs:1, atk:2, def:0, res:5, toHitMod:-20, toBlkMod:0, hp:1, dmg:0, rangedType:'none', ranged:0, thrownType:'none', thrown:0, weapon:'normal' },
+    b: { figs:1, atk:0, def:8, res:5, toHitMod:0, toBlkMod:20, hp:99, dmg:0, rangedType:'none', ranged:0, thrownType:'none', thrown:0, weapon:'normal' },
+    expected: { dmgToA: 0, dmgToB: 0.001 },
+  },
+  mirror: {
+    desc: 'Mirror Match: identical units — symmetric distributions',
+    a: { figs:4, atk:4, def:4, res:5, toHitMod:0, toBlkMod:0, hp:3, dmg:0, rangedType:'none', ranged:0, thrownType:'none', thrown:0, weapon:'normal' },
+    b: { figs:4, atk:4, def:4, res:5, toHitMod:0, toBlkMod:0, hp:3, dmg:0, rangedType:'none', ranged:0, thrownType:'none', thrown:0, weapon:'normal' },
+    expected: { dmgToA: 1.971, dmgToB: 1.971 },
+  },
+  rangedClose: {
+    desc: 'Missile Close Range: 4 bowmen at distance 2 — no distance penalty',
+    a: { figs:4, atk:1, def:1, res:5, toHitMod:0, toBlkMod:0, hp:1, dmg:0, rangedType:'missile', ranged:3, thrownType:'none', thrown:0, weapon:'normal' },
+    b: { figs:4, atk:3, def:2, res:5, toHitMod:0, toBlkMod:0, hp:1, dmg:0, rangedType:'none', ranged:0, thrownType:'none', thrown:0, weapon:'normal' },
+    rangedCheck: true, rangedDist: 2,
+    expected: { dmgToA: 0, dmgToB: 1.890 },
+  },
+  rangedFar: {
+    desc: 'Missile Long Range: same bowmen at distance 9 — max −30% penalty (10% To Hit)',
+    a: { figs:4, atk:1, def:1, res:5, toHitMod:0, toBlkMod:0, hp:1, dmg:0, rangedType:'missile', ranged:3, thrownType:'none', thrown:0, weapon:'normal' },
+    b: { figs:4, atk:3, def:2, res:5, toHitMod:0, toBlkMod:0, hp:1, dmg:0, rangedType:'none', ranged:0, thrownType:'none', thrown:0, weapon:'normal' },
+    rangedCheck: true, rangedDist: 9,
+    expected: { dmgToA: 0, dmgToB: 0.607 },
+  },
+  rangedMagic: {
+    desc: 'Magic Ranged: no distance penalty — compare with missile at same range',
+    a: { figs:4, atk:1, def:1, res:5, toHitMod:0, toBlkMod:0, hp:1, dmg:0, rangedType:'magic_c', ranged:3, thrownType:'none', thrown:0, weapon:'normal' },
+    b: { figs:4, atk:3, def:2, res:5, toHitMod:0, toBlkMod:0, hp:1, dmg:0, rangedType:'none', ranged:0, thrownType:'none', thrown:0, weapon:'normal' },
+    rangedCheck: true, rangedDist: 9,
+    expected: { dmgToA: 0, dmgToB: 1.890 },
+  },
+  rangedRock: {
+    desc: 'Boulder Attack: 1 giant, 10 rock vs armored — distance penalty applies',
+    a: { figs:1, atk:8, def:4, res:7, toHitMod:0, toBlkMod:0, hp:15, dmg:0, rangedType:'rock', ranged:10, thrownType:'none', thrown:0, weapon:'normal' },
+    b: { figs:6, atk:2, def:4, res:5, toHitMod:0, toBlkMod:0, hp:1, dmg:0, rangedType:'none', ranged:0, thrownType:'none', thrown:0, weapon:'normal' },
+    rangedCheck: true, rangedDist: 5,
+    expected: { dmgToA: 0, dmgToB: 0.733 },
+  },
+  thrownBasic: {
+    desc: 'Thrown Attack: 4 figs with thrown 3 + melee 2 — thrown kills reduce counter-attack',
+    a: { figs:4, atk:2, def:2, res:5, toHitMod:0, toBlkMod:0, hp:1, dmg:0, rangedType:'none', ranged:0, thrownType:'thrown', thrown:3, weapon:'normal' },
+    b: { figs:4, atk:3, def:2, res:5, toHitMod:0, toBlkMod:0, hp:1, dmg:0, rangedType:'none', ranged:0, thrownType:'none', thrown:0, weapon:'normal' },
+    expected: { dmgToA: 1.009, dmgToB: 2.851 },
+  },
+  thrownVsHighHP: {
+    desc: 'Thrown vs Tank: thrown softens before melee — compare total with melee-only',
+    a: { figs:6, atk:3, def:2, res:5, toHitMod:0, toBlkMod:0, hp:1, dmg:0, rangedType:'none', ranged:0, thrownType:'thrown', thrown:4, weapon:'normal' },
+    b: { figs:1, atk:10, def:4, res:8, toHitMod:0, toBlkMod:0, hp:20, dmg:0, rangedType:'none', ranged:0, thrownType:'none', thrown:0, weapon:'normal' },
+    expected: { dmgToA: 1.770, dmgToB: 4.905 },
+  },
+  breathFire: {
+    desc: 'Fire Breath: 1 fig, 8 breath + 5 melee — breath has no weapon To Hit bonus',
+    a: { figs:1, atk:5, def:5, res:8, toHitMod:10, toBlkMod:0, hp:10, dmg:0, rangedType:'none', ranged:0, thrownType:'fire', thrown:8, weapon:'magic' },
+    b: { figs:6, atk:2, def:3, res:5, toHitMod:0, toBlkMod:0, hp:1, dmg:0, rangedType:'none', ranged:0, thrownType:'none', thrown:0, weapon:'normal' },
+    expected: { dmgToA: 0.595, dmgToB: 2.697 },
+  },
+  breathLightning: {
+    desc: 'Lightning Breath: armor piercing (def halved) — compare with fire breath same stats',
+    a: { figs:1, atk:5, def:5, res:8, toHitMod:10, toBlkMod:0, hp:10, dmg:0, rangedType:'none', ranged:0, thrownType:'lightning', thrown:8, weapon:'magic' },
+    b: { figs:6, atk:2, def:3, res:5, toHitMod:0, toBlkMod:0, hp:1, dmg:0, rangedType:'none', ranged:0, thrownType:'none', thrown:0, weapon:'normal' },
+    expected: { dmgToA: 0.479, dmgToB: 3.538 },
+  },
+  wpnMelee: {
+    desc: 'Weapon Melee: adamantium (+2 atk, +10% hit) vs normal',
+    a: { figs:4, atk:3, def:3, res:5, toHitMod:0, toBlkMod:0, hp:1, dmg:0, rangedType:'none', ranged:0, thrownType:'none', thrown:0, weapon:'adamantium' },
+    b: { figs:4, atk:3, def:3, res:5, toHitMod:0, toBlkMod:0, hp:1, dmg:0, rangedType:'none', ranged:0, thrownType:'none', thrown:0, weapon:'normal' },
+    expected: { dmgToA: 0.824, dmgToB: 3.177 },
+  },
+  wpnMissile: {
+    desc: 'Weapon Missile: mithril bowmen (+1 atk, +10% hit) at range',
+    a: { figs:4, atk:1, def:1, res:5, toHitMod:0, toBlkMod:0, hp:1, dmg:0, rangedType:'missile', ranged:3, thrownType:'none', thrown:0, weapon:'mithril' },
+    b: { figs:4, atk:3, def:2, res:5, toHitMod:0, toBlkMod:0, hp:1, dmg:0, rangedType:'none', ranged:0, thrownType:'none', thrown:0, weapon:'normal' },
+    rangedCheck: true, rangedDist: 5,
+    expected: { dmgToA: 0, dmgToB: 2.494 },
+  },
+  wpnMagicRanged: {
+    desc: 'Weapon Magic Ranged: adamantium has NO effect (no atk, no hit bonus)',
+    a: { figs:4, atk:1, def:1, res:5, toHitMod:0, toBlkMod:0, hp:1, dmg:0, rangedType:'magic_c', ranged:3, thrownType:'none', thrown:0, weapon:'adamantium' },
+    b: { figs:4, atk:3, def:2, res:5, toHitMod:0, toBlkMod:0, hp:1, dmg:0, rangedType:'none', ranged:0, thrownType:'none', thrown:0, weapon:'normal' },
+    rangedCheck: true, rangedDist: 5,
+    expected: { dmgToA: 0, dmgToB: 1.890 },
+  },
+  wpnThrown: {
+    desc: 'Weapon Thrown: mithril gives +1 atk but NOT +10% To Hit',
+    a: { figs:4, atk:3, def:2, res:5, toHitMod:0, toBlkMod:0, hp:1, dmg:0, rangedType:'none', ranged:0, thrownType:'thrown', thrown:3, weapon:'mithril' },
+    b: { figs:4, atk:3, def:2, res:5, toHitMod:0, toBlkMod:0, hp:1, dmg:0, rangedType:'none', ranged:0, thrownType:'none', thrown:0, weapon:'normal' },
+    expected: { dmgToA: 0.542, dmgToB: 3.869 },
+  },
+};
+
+function applyPreset(name) {
+  const preset = PRESETS[name];
+  if (!preset) return;
+  function setUnit(prefix, u) {
+    document.getElementById(prefix + 'Figs').value = u.figs;
+    document.getElementById(prefix + 'Atk').value = u.atk;
+    document.getElementById(prefix + 'Def').value = u.def;
+    document.getElementById(prefix + 'Res').value = u.res;
+    document.getElementById(prefix + 'ToHitMod').value = u.toHitMod;
+    document.getElementById(prefix + 'ToBlkMod').value = u.toBlkMod;
+    document.getElementById(prefix + 'HP').value = u.hp;
+    document.getElementById(prefix + 'Dmg').value = u.dmg;
+    document.getElementById(prefix + 'RangedType').value = u.rangedType;
+    document.getElementById(prefix + 'Ranged').value = u.ranged;
+    document.getElementById(prefix + 'ThrownType').value = u.thrownType;
+    document.getElementById(prefix + 'Thrown').value = u.thrown;
+    document.getElementById(prefix + 'Weapon').value = u.weapon;
+  }
+  setUnit('a', preset.a);
+  setUnit('b', preset.b);
+  document.getElementById('aUnit').value = 'custom';
+  document.getElementById('bUnit').value = 'custom';
+  updateUnitLock('a');
+  updateUnitLock('b');
+  document.getElementById('rangedCheck').checked = preset.rangedCheck || false;
+  document.getElementById('rangedDist').value = preset.rangedDist || 1;
+  document.getElementById('nodeAura').value = preset.nodeAura || 'none';
+  updateTypeVisibility();
+  calculate();
+}
+
+function updateTypeVisibility() {
+  ['aRangedType', 'bRangedType', 'aThrownType', 'bThrownType'].forEach(id => {
+    const sel = document.getElementById(id);
+    const input = sel.nextElementSibling;
+    if (input) input.classList.toggle('disabled-field', sel.value === 'none');
+  });
+
+  // Grey out ranged checkbox if attacker has no ranged attack with strength > 0
+  const aRangedVal = parseInt(document.getElementById('aRanged').value) || 0;
+  const hasRanged = document.getElementById('aRangedType').value !== 'none' && aRangedVal > 0;
+  const rangedCheckLabel = document.getElementById('rangedCheckLabel');
+  const rangedCheck = document.getElementById('rangedCheck');
+  rangedCheckLabel.classList.toggle('disabled-field', !hasRanged);
+
+  // Grey out ranged distance if ranged checkbox is not active
+  const isRanged = hasRanged && rangedCheck.checked;
+  document.getElementById('rangedDistLabel').classList.toggle('disabled-field', !isRanged);
+  document.getElementById('rangedDist').classList.toggle('disabled-field', !isRanged);
+}
+
+document.querySelectorAll('input, select').forEach(el => {
+  el.addEventListener('input', () => { updateTypeVisibility(); calculate(); });
+  el.addEventListener('change', () => { updateTypeVisibility(); calculate(); });
+});
+
+// Generate preset buttons from PRESETS data
+(function buildPresetButtons() {
+  const container = document.getElementById('presetButtons');
+  for (const [name, preset] of Object.entries(PRESETS)) {
+    const parts = preset.desc.split(/:\s*(.+)/);
+    const title = parts[0];
+    const sub = parts[1] || '';
+    const exp = preset.expected;
+    const expLine = exp ? `E[A]=${exp.dmgToA.toFixed(3)} E[B]=${exp.dmgToB.toFixed(3)}` : '';
+    const btn = document.createElement('button');
+    btn.onclick = () => applyPreset(name);
+    btn.innerHTML = `${title}<br><small>${sub}</small>` +
+      (expLine ? `<br><small style="color:var(--accent)">${expLine}</small>` : '');
+    container.appendChild(btn);
+  }
+})();
+
+// Initial load: populate unit dropdowns for selected version
+onVersionChange();
+
+// --- Test Runner ---
+// Call runTests() from the browser console or via Playwright to verify all presets.
+function runTests(tolerance) {
+  tolerance = tolerance || 0.002;
+  const results = [];
+  let allPassed = true;
+  for (const [name, preset] of Object.entries(PRESETS)) {
+    if (!preset.expected) continue;
+    applyPreset(name);
+    const panels = document.querySelectorAll('.dist-header .avg');
+    const dmgToA = parseFloat(panels[0].textContent);
+    const dmgToB = parseFloat(panels[1].textContent);
+    const errA = Math.abs(dmgToA - preset.expected.dmgToA);
+    const errB = Math.abs(dmgToB - preset.expected.dmgToB);
+    const pass = errA < tolerance && errB < tolerance;
+    if (!pass) allPassed = false;
+    results.push({
+      name, pass,
+      dmgToA, expectedA: preset.expected.dmgToA, errA: +errA.toFixed(4),
+      dmgToB, expectedB: preset.expected.dmgToB, errB: +errB.toFixed(4),
+    });
+  }
+  const failures = results.filter(r => !r.pass);
+  if (allPassed) {
+    console.log(`All ${results.length} tests passed.`);
+  } else {
+    console.error(`${failures.length}/${results.length} tests FAILED:`);
+    failures.forEach(f => console.error(`  ${f.name}: A=${f.dmgToA} (exp ${f.expectedA}, err ${f.errA}), B=${f.dmgToB} (exp ${f.expectedB}, err ${f.errB})`));
+  }
+  return { allPassed, total: results.length, failures };
+}
+</script>
+</body>
+</html>
