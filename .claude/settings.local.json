@@ -40,7 +40,11 @@
       "Bash(python3 scripts/parse_units_dat.py)",
       "Bash(python3 -c \":*)",
       "mcp__playwright__browser_snapshot",
-      "mcp__playwright__browser_select_option"
+      "mcp__playwright__browser_select_option",
+      "Bash(xxd \"c:/CoM2-damage-calculator/CoM2 material/Units.dat\")",
+      "Bash(xxd -s 0xF08 -l 256 \"c:/CoM2-damage-calculator/CoM2 material/Units.dat\")",
+      "Bash(xxd -s 0x168C -l 256 \"c:/CoM2-damage-calculator/CoM2 material/Units.dat\")",
+      "Bash(python3 -c ':*)"
     ]
   }
 }
