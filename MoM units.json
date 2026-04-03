@@ -936,7 +936,7 @@
     "sort_order": 1,
     "abilities": [
       "Noncorporeal",
-      "ResistanceToAll"
+      "ResistanceToAll=1"
     ]
   },
   "1002": {
@@ -973,7 +973,7 @@
     "abilities": [
       "DispelEvil",
       "Flying",
-      "HolyBonus",
+      "HolyBonus=1",
       "IllusionImmunity"
     ]
   },
@@ -997,34 +997,73 @@
     ]
   },
   "1005": {
+    "figures": 6,
+    "resist": 3,
+    "hp": 3,
+    "death_unit": 1,
+    "melee": 4,
+    "defense": 3,
+    "to_hit": 10,
     "id": 1005,
     "name": "Zombies",
     "race": "Death",
     "category": "Death Creatures",
-    "sort_order": 1
+    "sort_order": 1,
+    "abilities": [
+      "ColdImmunity",
+      "DeathImmunity",
+      "IllusionImmunity",
+      "PoisonImmunity"
+    ]
   },
   "1044": {
+    "figures": 6,
+    "resist": 3,
+    "hp": 3,
+    "death_unit": 1,
+    "melee": 4,
+    "defense": 3,
+    "to_hit": 20,
     "id": 1044,
     "name": "Mag. weap. Zombies",
     "race": "Death",
     "category": "Death Creatures",
-    "sort_order": 2
+    "sort_order": 2,
+    "abilities": [
+      "ColdImmunity",
+      "DeathImmunity",
+      "IllusionImmunity",
+      "PoisonImmunity"
+    ]
   },
   "1045": {
+    "figures": 6,
+    "resist": 3,
+    "hp": 3,
+    "death_unit": 1,
+    "melee": 5,
+    "defense": 4,
+    "to_hit": 20,
     "id": 1045,
     "name": "Mithril Zombies",
     "race": "Death",
     "category": "Death Creatures",
-    "sort_order": 3
+    "sort_order": 3,
+    "abilities": [
+      "ColdImmunity",
+      "DeathImmunity",
+      "IllusionImmunity",
+      "PoisonImmunity"
+    ]
   },
   "1046": {
-    "death_unit": 1,
     "figures": 6,
-    "melee": 4,
-    "defense": 3,
     "resist": 3,
-    "to_hit": 10,
     "hp": 3,
+    "death_unit": 1,
+    "melee": 6,
+    "defense": 5,
+    "to_hit": 20,
     "id": 1046,
     "name": "Adamant. Zombies",
     "race": "Death",
@@ -1075,7 +1114,7 @@
       "ColdImmunity",
       "DeathImmunity",
       "IllusionImmunity",
-      "Poison",
+      "Poison=1",
       "PoisonImmunity"
     ]
   },
@@ -1118,7 +1157,7 @@
       "DeathImmunity",
       "IllusionImmunity",
       "PoisonImmunity",
-      "Regeneration",
+      "Regeneration=1",
       "WeaponImmunity"
     ]
   },
@@ -1139,7 +1178,7 @@
       "ColdImmunity",
       "DeathGaze=12",
       "DeathImmunity",
-      "GazeRanged",
+      "GazeRanged=1",
       "IllusionImmunity",
       "Invisibility",
       "PoisonImmunity"
@@ -1167,7 +1206,7 @@
       "IllusionImmunity",
       "Noncorporeal",
       "PoisonImmunity",
-      "Regeneration",
+      "Regeneration=1",
       "WeaponImmunity"
     ]
   },
@@ -1436,7 +1475,7 @@
     "category": "Chaos Creatures",
     "sort_order": 9,
     "abilities": [
-      "Regeneration"
+      "Regeneration=1"
     ]
   },
   "1024": {
@@ -1539,7 +1578,7 @@
     "category": "Nature Creatures",
     "sort_order": 5,
     "abilities": [
-      "GazeRanged",
+      "GazeRanged=1",
       "StoningGaze=11"
     ]
   },
@@ -1578,7 +1617,7 @@
     "sort_order": 7,
     "abilities": [
       "Flying",
-      "GazeRanged",
+      "GazeRanged=1",
       "StoningGaze=12"
     ]
   },
@@ -1937,21 +1976,6 @@
     "sort_order": 9,
     "abilities": [
       "LongRange"
-    ]
-  },
-  "43": {
-    "defense": 1,
-    "resist": 4,
-    "hp": 10,
-    "melee": 2,
-    "figures": 1,
-    "id": 43,
-    "name": "Gnoll Settlers",
-    "race": "Gnoll",
-    "category": "Gnoll",
-    "sort_order": 1,
-    "abilities": [
-      "CreateOutpost"
     ]
   },
   "44": {
@@ -2375,7 +2399,7 @@
     "abilities": [
       "ArmorPiercing",
       "FirstStrike",
-      "HolyBonus",
+      "HolyBonus=1",
       "MagicImmunity"
     ]
   },
@@ -2767,21 +2791,6 @@
       "Poison=6"
     ]
   },
-  "88": {
-    "defense": 1,
-    "resist": 5,
-    "hp": 20,
-    "melee": 1,
-    "figures": 1,
-    "id": 88,
-    "name": "Beastmen Settlers",
-    "race": "Beastmen",
-    "category": "Beastmen",
-    "sort_order": 1,
-    "abilities": [
-      "CreateOutpost"
-    ]
-  },
   "89": {
     "defense": 1,
     "resist": 5,
@@ -3013,7 +3022,7 @@
     "sort_order": 6,
     "abilities": [
       "Invisibility",
-      "Poison"
+      "Poison=1"
     ]
   },
   "106": {
@@ -3280,7 +3289,7 @@
     "category": "Troll",
     "sort_order": 1,
     "abilities": [
-      "Regeneration"
+      "Regeneration=1"
     ]
   },
   "126": {
@@ -3296,7 +3305,7 @@
     "sort_order": 2,
     "abilities": [
       "LargeShield",
-      "Regeneration"
+      "Regeneration=1"
     ]
   },
   "127": {
@@ -3313,7 +3322,7 @@
     "abilities": [
       "FirstStrike",
       "NegateFirstStrike",
-      "Regeneration"
+      "Regeneration=1"
     ]
   },
   "128": {
@@ -3330,7 +3339,7 @@
     "category": "Troll",
     "sort_order": 4,
     "abilities": [
-      "Regeneration"
+      "Regeneration=1"
     ]
   },
   "129": {
@@ -3345,7 +3354,7 @@
     "category": "Troll",
     "sort_order": 5,
     "abilities": [
-      "Regeneration"
+      "Regeneration=1"
     ]
   },
   "130": {

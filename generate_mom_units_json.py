@@ -279,6 +279,19 @@ def main():
             else:
                 all_cases[uid].update(stats)
 
+    # Hardcode zombie variants — the source uses runtime arithmetic (unitidx - 1040/1041)
+    # that the parser cannot evaluate. Stats derived from the formula plus shared fields.
+    # Shared: figures=6, resist=3, hp=3, immunities, death_unit
+    _zombie_shared = {
+        'figures': 6, 'resist': 3, 'hp': 3,
+        'IllusionImmunity': 1, 'DeathImmunity': 1, 'ColdImmunity': 1, 'PoisonImmunity': 1,
+        'death_unit': 1,
+    }
+    all_cases[1005] = {**_zombie_shared, 'melee': 4, 'defense': 3, 'to_hit': 10}  # base
+    all_cases[1044] = {**_zombie_shared, 'melee': 4, 'defense': 3, 'to_hit': 20}  # mag. weap.
+    all_cases[1045] = {**_zombie_shared, 'melee': 5, 'defense': 4, 'to_hit': 20}  # mithril
+    all_cases[1046] = {**_zombie_shared, 'melee': 6, 'defense': 5, 'to_hit': 20}  # adamantium
+
     print(f"Total unique unit IDs in changeunit: {len(all_cases)}")
 
     # --- Parse names/races/categories/sort_order from changerace.js ---
@@ -322,17 +335,21 @@ def main():
         # Add CreateOutpost for settlers so they can be filtered by the calculator
         if base_name == "Settlers":
             abilities.append('CreateOutpost')
+        ALWAYS_VALUED = {'HolyBonus', 'Poison', 'LifeSteal', 'Regeneration',
+                         'Immolation', 'ResistanceToAll', 'DeathGaze', 'StoningGaze',
+                         'DoomGaze', 'GazeRanged', 'StoningTouch'}
         for key in sorted(stats.keys() - STAT_FIELDS):
             val = stats[key]
             if val:
-                abilities.append(key if val == 1 else f'{key}={val}')
+                abilities.append(f'{key}={val}' if (val != 1 or key in ALWAYS_VALUED) else key)
         for key in list(stats.keys()):
             if key not in STAT_FIELDS:
                 del stats[key]
         if abilities:
             stats['abilities'] = abilities
 
-        units[emit_id] = stats
+        if 'CreateOutpost' not in abilities:
+            units[emit_id] = stats
 
     with open(OUTPUT, 'w', encoding='utf-8') as f:
         json.dump(units, f, indent=2)

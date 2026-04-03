@@ -44,7 +44,11 @@
       "Bash(xxd \"c:/CoM2-damage-calculator/CoM2 material/Units.dat\")",
       "Bash(xxd -s 0xF08 -l 256 \"c:/CoM2-damage-calculator/CoM2 material/Units.dat\")",
       "Bash(xxd -s 0x168C -l 256 \"c:/CoM2-damage-calculator/CoM2 material/Units.dat\")",
-      "Bash(python3 -c ':*)"
+      "Bash(python3 -c ':*)",
+      "Bash(python generate_unit_overview.py)",
+      "Bash(python generate_com2_units_json.py)",
+      "Bash(python parse_changeunit.py)",
+      "Bash(python -c ':*)"
     ]
   }
 }

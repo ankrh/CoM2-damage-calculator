@@ -44,6 +44,16 @@ REALM_NAMES = {
     15: 'Arcane', 16: 'Nature', 17: 'Sorcery', 18: 'Chaos', 19: 'Life', 20: 'Death',
 }
 
+# Spell ID -> display name for Spellability field
+SPELL_NAMES = {
+    5:   "Web",
+    96:  "Fireball",
+    104: "Doom Bolt",
+    125: "Healing",
+    137: "Raise Dead",
+    191: "Summon Demon",
+}
+
 
 def parse_units_ini(path):
     units = []
@@ -156,10 +166,19 @@ def ini_unit_to_record(u):
         elif val and val != '0':
             abilities.append(f'{ab}={val}')
 
-    for ab in ['Poison', 'Spellability', 'Spellcharges', 'Destruction']:
+    for ab in ['Caster', 'Poison', 'Destruction']:
         val = u.get(ab, '').strip()
         if val and val != '0':
             abilities.append(f'{ab}={val}')
+
+    # Spell ability: resolve ID to name
+    spell_id = u.get('Spellability', '').strip()
+    if spell_id and spell_id != '0':
+        spell_id_int = int(spell_id)
+        spell_name = SPELL_NAMES.get(spell_id_int, f'Spell#{spell_id}')
+        charges = u.get('Spellcharges', '0').strip()
+        charges_int = int(charges) if charges else 0
+        abilities.append(f'Spellcaster={spell_name}x{charges_int}')
 
     # Keys with spaces in INI; output without spaces
     val = u.get('Life Steal', '').strip()
@@ -173,6 +192,12 @@ def ini_unit_to_record(u):
         val = u.get(ab, '').strip()
         if val and val != '0':
             abilities.append(f'{ab}={val}')
+
+    # Collapse Forester + Mountainwalk into Pathfinding
+    if 'Forester' in abilities and 'Mountainwalk' in abilities:
+        abilities.remove('Forester')
+        abilities.remove('Mountainwalk')
+        abilities.append('Pathfinding')
 
     if abilities:
         record['abilities'] = abilities
@@ -192,8 +217,12 @@ def main():
     ini_path = 'CoM2 material/UNITS.INI'
     out_path = 'CoM2 units.json'
 
+    SPECIAL_UNIT_NAMES = {'Floating Island'}
+
     raw_units = parse_units_ini(ini_path)
-    records = [ini_unit_to_record(u) for u in raw_units]
+    records = [ini_unit_to_record(u) for u in raw_units
+               if u.get('CreateOutpost', '').lower() != 'yes'
+               and u.get('Name') not in SPECIAL_UNIT_NAMES]
 
     # Keyed by id (string) to match units_from_changeunit.json convention
     output = {str(r['id']): r for r in records}

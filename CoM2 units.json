@@ -182,8 +182,7 @@
     "ranged_type": "missile",
     "ammo": 8,
     "abilities": [
-      "Forester",
-      "Mountainwalk"
+      "Pathfinding"
     ],
     "ini_name": "Huntress",
     "category": "Heroes",
@@ -359,8 +358,7 @@
     "ammo": 8,
     "abilities": [
       "PoisonImmunity",
-      "Forester",
-      "Mountainwalk"
+      "Pathfinding"
     ],
     "ini_name": "Ranger",
     "category": "Heroes",
@@ -898,9 +896,8 @@
     "breath": 2,
     "breath_type": "thrown",
     "abilities": [
-      "Forester",
-      "Mountainwalk",
-      "LargeShield"
+      "LargeShield",
+      "Pathfinding"
     ],
     "ini_name": "Swordsmen",
     "category": "Barbarian",
@@ -923,8 +920,7 @@
     "ranged_type": "missile",
     "ammo": 8,
     "abilities": [
-      "Forester",
-      "Mountainwalk"
+      "Pathfinding"
     ],
     "ini_name": "Bowmen",
     "category": "Barbarian",
@@ -969,12 +965,10 @@
     "ranged_type": "magic_n",
     "ammo": 4,
     "abilities": [
-      "Forester",
-      "Mountainwalk",
       "Healer",
       "Purify",
-      "Spellability=125",
-      "Spellcharges=1"
+      "Spellcaster=Healingx1",
+      "Pathfinding"
     ],
     "ini_name": "Shaman",
     "category": "Barbarian",
@@ -982,26 +976,6 @@
     "moves": 4,
     "cost": 50,
     "upkeep": 2
-  },
-  "44": {
-    "id": 44,
-    "name": "Settlers",
-    "race": 14,
-    "figures": 1,
-    "hp": 10,
-    "melee": 0,
-    "defense": 1,
-    "resist": 5,
-    "to_hit": 0,
-    "abilities": [
-      "CreateOutpost"
-    ],
-    "ini_name": "Settlers",
-    "category": "Special",
-    "hero_type": 0,
-    "moves": 2,
-    "cost": 150,
-    "upkeep": 1
   },
   "45": {
     "id": 45,
@@ -1016,8 +990,7 @@
     "breath": 3,
     "breath_type": "thrown",
     "abilities": [
-      "Forester",
-      "Mountainwalk"
+      "Pathfinding"
     ],
     "ini_name": "Berserkers",
     "category": "Barbarian",
@@ -1119,8 +1092,7 @@
     "abilities": [
       "Healer",
       "Purify",
-      "Spellability=125",
-      "Spellcharges=1"
+      "Spellcaster=Healingx1"
     ],
     "ini_name": "Priests",
     "category": "Beastmen",
@@ -1143,7 +1115,8 @@
     "ranged_type": "magic_c",
     "ammo": 4,
     "abilities": [
-      "MissileImmunity"
+      "MissileImmunity",
+      "Caster=20"
     ],
     "ini_name": "Magicians",
     "category": "Beastmen",
@@ -1170,26 +1143,6 @@
     "hero_type": 0,
     "moves": 2,
     "cost": 30,
-    "upkeep": 1
-  },
-  "53": {
-    "id": 53,
-    "name": "Settlers",
-    "race": 0,
-    "figures": 1,
-    "hp": 20,
-    "melee": 1,
-    "defense": 1,
-    "resist": 5,
-    "to_hit": 0,
-    "abilities": [
-      "CreateOutpost"
-    ],
-    "ini_name": "Settlers",
-    "category": "Barbarian",
-    "hero_type": 0,
-    "moves": 2,
-    "cost": 150,
     "upkeep": 1
   },
   "54": {
@@ -1359,8 +1312,7 @@
     "abilities": [
       "Healer",
       "Purify",
-      "Spellability=125",
-      "Spellcharges=1"
+      "Spellcaster=Healingx1"
     ],
     "ini_name": "Priests",
     "category": "Dark Elf",
@@ -1383,7 +1335,8 @@
     "ranged_type": "magic_c",
     "ammo": 4,
     "abilities": [
-      "LargeShield"
+      "LargeShield",
+      "Caster=14"
     ],
     "ini_name": "Apprentices",
     "category": "Dark Elf",
@@ -1428,8 +1381,7 @@
     "ammo": 4,
     "abilities": [
       "MissileImmunity",
-      "Spellability=104",
-      "Spellcharges=1"
+      "Spellcaster=Doom Boltx1"
     ],
     "ini_name": "Warlocks",
     "category": "Dark Elf",
@@ -1568,8 +1520,7 @@
       "Flying",
       "Healer",
       "Purify",
-      "Spellability=125",
-      "Spellcharges=1"
+      "Spellcaster=Healingx1"
     ],
     "ini_name": "Saints",
     "category": "Draconian",
@@ -1593,7 +1544,8 @@
     "ammo": 4,
     "abilities": [
       "MissileImmunity",
-      "Flying"
+      "Flying",
+      "Caster=20"
     ],
     "ini_name": "Magicians",
     "category": "Draconian",
@@ -1621,27 +1573,6 @@
     "hero_type": 0,
     "moves": 4,
     "cost": 75,
-    "upkeep": 1
-  },
-  "73": {
-    "id": 73,
-    "name": "Settlers",
-    "race": 0,
-    "figures": 1,
-    "hp": 10,
-    "melee": 0,
-    "defense": 2,
-    "resist": 5,
-    "to_hit": 0,
-    "abilities": [
-      "Flying",
-      "CreateOutpost"
-    ],
-    "ini_name": "Settlers",
-    "category": "Barbarian",
-    "hero_type": 0,
-    "moves": 2,
-    "cost": 150,
     "upkeep": 1
   },
   "74": {
@@ -1839,8 +1770,7 @@
     "breath": 1,
     "breath_type": "thrown",
     "abilities": [
-      "Forester",
-      "Mountainwalk"
+      "Pathfinding"
     ],
     "ini_name": "Spearmen",
     "category": "Barbarian",
@@ -1939,9 +1869,8 @@
     "breath": 4,
     "breath_type": "thrown",
     "abilities": [
-      "Forester",
-      "Mountainwalk",
-      "LargeShield"
+      "LargeShield",
+      "Pathfinding"
     ],
     "ini_name": "Gladiators",
     "category": "Barbarian",
@@ -1961,8 +1890,7 @@
     "resist": 5,
     "to_hit": 0,
     "abilities": [
-      "Forester",
-      "Mountainwalk"
+      "Pathfinding"
     ],
     "ini_name": "Wolf Riders",
     "category": "Gnoll",
@@ -2027,7 +1955,8 @@
     "ammo": 4,
     "abilities": [
       "MissileImmunity",
-      "Lucky"
+      "Lucky",
+      "Caster=20"
     ],
     "ini_name": "Magicians",
     "category": "Halfling",
@@ -2053,8 +1982,7 @@
       "Healer",
       "Purify",
       "Lucky",
-      "Spellability=125",
-      "Spellcharges=1"
+      "Spellcaster=Healingx1"
     ],
     "ini_name": "Shaman",
     "category": "Halfling",
@@ -2077,8 +2005,8 @@
     "breath_type": "thrown",
     "abilities": [
       "MissileImmunity",
-      "Forester",
-      "Mountainwalk"
+      "Caster=20",
+      "Pathfinding"
     ],
     "ini_name": "Spellserkers",
     "category": "Barbarian",
@@ -2208,7 +2136,8 @@
     "ammo": 4,
     "abilities": [
       "MissileImmunity",
-      "Forester"
+      "Forester",
+      "Caster=20"
     ],
     "ini_name": "Magicians",
     "category": "High Elf",
@@ -2216,27 +2145,6 @@
     "moves": 6,
     "cost": 120,
     "upkeep": 3
-  },
-  "100": {
-    "id": 100,
-    "name": "Settlers",
-    "race": 0,
-    "figures": 1,
-    "hp": 40,
-    "melee": 0,
-    "defense": 1,
-    "resist": 5,
-    "to_hit": 0,
-    "abilities": [
-      "Regeneration=1",
-      "CreateOutpost"
-    ],
-    "ini_name": "Settlers",
-    "category": "Barbarian",
-    "hero_type": 0,
-    "moves": 2,
-    "cost": 150,
-    "upkeep": 1
   },
   "101": {
     "id": 101,
@@ -2401,8 +2309,7 @@
     "abilities": [
       "Healer",
       "Purify",
-      "Spellability=125",
-      "Spellcharges=1",
+      "Spellcaster=Healingx1",
       "ResistanceToAll=1"
     ],
     "ini_name": "Priests",
@@ -2426,7 +2333,8 @@
     "ranged_type": "magic_c",
     "ammo": 4,
     "abilities": [
-      "MissileImmunity"
+      "MissileImmunity",
+      "Caster=20"
     ],
     "ini_name": "Magicians",
     "category": "High Men",
@@ -2467,8 +2375,7 @@
     "to_hit": 0,
     "abilities": [
       "LargeShield",
-      "Spellability=125",
-      "Spellcharges=1"
+      "Spellcaster=Healingx1"
     ],
     "ini_name": "Crusaders",
     "category": "High Men",
@@ -2740,8 +2647,7 @@
       "Waterwalking",
       "Healer",
       "Purify",
-      "Spellability=125",
-      "Spellcharges=1"
+      "Spellcaster=Healingx1"
     ],
     "ini_name": "Shaman",
     "category": "Lizardman",
@@ -2749,27 +2655,6 @@
     "moves": 4,
     "cost": 60,
     "upkeep": 2
-  },
-  "125": {
-    "id": 125,
-    "name": "Settlers",
-    "race": 0,
-    "figures": 1,
-    "hp": 20,
-    "melee": 0,
-    "defense": 1,
-    "resist": 3,
-    "to_hit": 0,
-    "abilities": [
-      "Waterwalking",
-      "CreateOutpost"
-    ],
-    "ini_name": "Settlers",
-    "category": "Barbarian",
-    "hero_type": 0,
-    "moves": 4,
-    "cost": 120,
-    "upkeep": 1
   },
   "126": {
     "id": 126,
@@ -2852,7 +2737,8 @@
     "ammo": 4,
     "abilities": [
       "MissileImmunity",
-      "Regeneration=1"
+      "Regeneration=1",
+      "Caster=20"
     ],
     "ini_name": "Magicians",
     "category": "Troll",
@@ -2877,8 +2763,7 @@
     "abilities": [
       "Healer",
       "Purify",
-      "Spellability=125",
-      "Spellcharges=1"
+      "Spellcaster=Healingx1"
     ],
     "ini_name": "Priests",
     "category": "Nomad",
@@ -2901,7 +2786,8 @@
     "ranged_type": "magic_c",
     "ammo": 4,
     "abilities": [
-      "MissileImmunity"
+      "MissileImmunity",
+      "Caster=20"
     ],
     "ini_name": "Magicians",
     "category": "Nomad",
@@ -2989,9 +2875,8 @@
     "ammo": 6,
     "abilities": [
       "PoisonImmunity",
-      "Forester",
-      "Mountainwalk",
-      "LongRange"
+      "LongRange",
+      "Pathfinding"
     ],
     "ini_name": "Rangers",
     "category": "Nomad",
@@ -3135,8 +3020,7 @@
     "abilities": [
       "Healer",
       "Purify",
-      "Spellability=125",
-      "Spellcharges=1"
+      "Spellcaster=Healingx1"
     ],
     "ini_name": "Shaman",
     "category": "Orc",
@@ -3159,7 +3043,8 @@
     "ranged_type": "magic_c",
     "ammo": 4,
     "abilities": [
-      "MissileImmunity"
+      "MissileImmunity",
+      "Caster=20"
     ],
     "ini_name": "Magicians",
     "category": "Orc",
@@ -3310,8 +3195,7 @@
       "Healer",
       "Purify",
       "Regeneration=2",
-      "Spellability=125",
-      "Spellcharges=1"
+      "Spellcaster=Healingx1"
     ],
     "ini_name": "Shaman",
     "category": "Troll",
@@ -3319,27 +3203,6 @@
     "moves": 4,
     "cost": 80,
     "upkeep": 2
-  },
-  "151": {
-    "id": 151,
-    "name": "Barbarian Settlers",
-    "race": 0,
-    "figures": 1,
-    "hp": 10,
-    "melee": 0,
-    "defense": 1,
-    "resist": 5,
-    "to_hit": 10,
-    "abilities": [
-      "Forester",
-      "CreateOutpost"
-    ],
-    "ini_name": "Settlers",
-    "category": "Barbarian",
-    "hero_type": 0,
-    "moves": 2,
-    "cost": 150,
-    "upkeep": 1
   },
   "152": {
     "id": 152,
@@ -3473,8 +3336,7 @@
       "Mountainwalk",
       "WallCrusher",
       "Fantastic",
-      "Spellability=96",
-      "Spellcharges=1"
+      "Spellcaster=Fireballx1"
     ],
     "ini_name": "Fire Giant",
     "category": "Chaos Creatures",
@@ -3601,7 +3463,8 @@
       "FireImmunity",
       "Flying",
       "Fantastic",
-      "Immolation"
+      "Immolation",
+      "Caster=40"
     ],
     "ini_name": "Efreet",
     "category": "Chaos Creatures",
@@ -3778,7 +3641,8 @@
       "DeathImmunity",
       "WeaponImmunity",
       "Flying",
-      "Fantastic"
+      "Fantastic",
+      "Caster=40"
     ],
     "ini_name": "Demon",
     "category": "Death Creatures",
@@ -3903,8 +3767,7 @@
       "Fantastic",
       "Fear",
       "Supernatural",
-      "Spellability=191",
-      "Spellcharges=3",
+      "Spellcaster=Summon Demonx3",
       "LifeSteal=-2"
     ],
     "ini_name": "Demon Lord",
@@ -3998,7 +3861,8 @@
       "IllusionImmunity",
       "Flying",
       "HolyBonus=1",
-      "Fantastic"
+      "Fantastic",
+      "Caster=24"
     ],
     "ini_name": "Angel",
     "category": "Life Creatures",
@@ -4024,7 +3888,8 @@
       "Healer",
       "HolyBonus=2",
       "Fantastic",
-      "Supernatural"
+      "Supernatural",
+      "Caster=29"
     ],
     "ini_name": "Arch Angel",
     "category": "Life Creatures",
@@ -4136,8 +4001,7 @@
       "Fantastic",
       "CounterImmunity",
       "Poison=3",
-      "Spellability=5",
-      "Spellcharges=1"
+      "Spellcaster=Webx1"
     ],
     "ini_name": "Giant Spiders",
     "category": "Nature Creatures",
@@ -4190,12 +4054,11 @@
       "FirstStrike",
       "IllusionImmunity",
       "PoisonImmunity",
-      "Forester",
-      "Mountainwalk",
       "WallCrusher",
       "Fantastic",
       "StoningImmunity",
-      "Supernatural"
+      "Supernatural",
+      "Pathfinding"
     ],
     "ini_name": "Colossus",
     "category": "Nature Creatures",
@@ -4263,7 +4126,8 @@
       "NegateFirstStrike",
       "Regeneration=3",
       "Fantastic",
-      "Supernatural"
+      "Supernatural",
+      "Caster=40"
     ],
     "ini_name": "Behemoth",
     "category": "Nature Creatures",
@@ -4295,30 +4159,6 @@
     "moves": 6,
     "cost": 610,
     "upkeep": 15
-  },
-  "190": {
-    "id": 190,
-    "name": "Floating Island",
-    "race": 17,
-    "figures": 1,
-    "hp": 45,
-    "melee": 0,
-    "defense": 0,
-    "resist": 9,
-    "to_hit": 0,
-    "abilities": [
-      "DeathImmunity",
-      "PoisonImmunity",
-      "Sailing",
-      "Fantastic",
-      "StoningImmunity"
-    ],
-    "ini_name": "Floating Island",
-    "category": "Sorcery Creatures",
-    "hero_type": 0,
-    "moves": 6,
-    "cost": 30,
-    "upkeep": 1
   },
   "191": {
     "id": 191,
@@ -4443,7 +4283,8 @@
       "Flying",
       "Windwalking",
       "Fantastic",
-      "Supernatural"
+      "Supernatural",
+      "Caster=35"
     ],
     "ini_name": "Djinn",
     "category": "Sorcery Creatures",
@@ -4571,8 +4412,7 @@
       "Regeneration=3",
       "Fantastic",
       "HealingAura",
-      "Spellability=137",
-      "Spellcharges=3"
+      "Spellcaster=Raise Deadx3"
     ],
     "ini_name": "Phoenix",
     "category": "Life Creatures",
