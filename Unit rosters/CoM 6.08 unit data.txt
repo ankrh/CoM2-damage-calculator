@@ -1,0 +1,199 @@
+Nr	Race	UnitName	Fig	Me	Ra	Df	Re	Hp	Th	Move	RangedType	Shots	Gaze/Poison	Cost	Upkeep	Parm1	Parm2	Movement	Immunities	Attributes	Abilities	Attacks	TypeCode	Scout	Transport	Construction	
+  0	Dwarven	Dwarf	  1	  9	   	  5	 10	 15	  	  3.0		   	   	  100	  2	  10	Fighter	Cavalry, Mountaineer					27849	  1	   	   	
+  1	Barbarian	Barbarian	  1	  8	  5	  4	  5	 14	  	  3.0	Thrown Weapons	   	   	  100	  2	  17	Fighter	Cavalry	Cold Imm				27850	  1	   	   	
+  2	High Men	Sage	  1	  1	 10	  4	  6	 10	  	  3.0	Sorcery Illusion	  4	   	  200	  3	  28	Wizard	Cavalry					27851	  1	   	   	
+  3	High Men	Dervish	  1	  8	  8	  5	  5	 11	  	  3.0	Arrow	  8	   	  200	  2	   2	Bow	Cavalry					27852	  1	   	   	
+  4	Beastmen	Beastmaster	  1	  7	  9	  5	  6	 12	  	  3.0	Arrow	  8	   	  200	  4	  18	Bow	Cavalry, Forester					27853	  2	   	   	
+  5	High Men	Bard	  1	  8	   	  5	  6	 11	  	  3.0		   	  1	  200	  4	  22	Fighter	Cavalry		Holy Bonus			27854	  1	   	   	
+  6	Orc	Orc Archer	  1	  7	  7	  6	  7	 12	  	  3.0	Arrow	  8	   	  200	  4	   6	Bow	Cavalry					27855	  1	   	   	
+  7	High Men	Healer	  1	  3	 10	  6	  8	 10	  	  3.0	Nature Priest	  6	   	  200	  4	  30	Fighter Wizard	Cavalry			Healer		27856	  1	   	   	
+  8	High Men	Huntress	  1	  4	 12	  5	  5	 12	  	  3.0	Arrow	  8	   	  200	  2	  31	Bow	Forester, Mountaineer					27857	  1	   	   	
+  9	High Men	Thief	  1	  9	   	  4	  5	 12	  	  4.0		   	   	  500	  8	  32	Fighter	Cavalry					27858	  1	   	   	
+ 10	High Men	Druid	  1	  1	 10	  5	  5	 10	  	  3.0	Nature Green	  4	   	  200	  2	  12	Wizard	Cavalry			Purify		27859	  2	   	   	
+ 11	High Men	War Monk	  1	 10	   	  6	  5	 11	  	  3.0		   	   	  400	  6	  20	Fighter	Cavalry					27860	  1	   	   	
+ 12	High Men	Warrior Mage	  1	  8	  8	  6	  5	 12	  	  3.0	Chaos Fireball	  6	   	  200	  4	  26	Fighter Wizard	Cavalry					27861	  1	   	   	
+ 13	High Men	Magician	  1	  1	 12	  5	  8	 10	  	  3.0	Chaos Fireball	  6	   	  600	 10	  15	Wizard	Cavalry	Missiles Imm			Destruction	27862	  1	   	   	
+ 14	High Men	Assassin	  1	 10	   	  5	  5	 12	  	  4.0		   	  9	  400	  6	  33	Fighter	Cavalry				First Strike, Poison attack	27863	  1	   	   	
+ 15	High Men	Wind Mage	  1	  1	 10	  5	  5	 10	  	  3.0	Sorcery Illusion	  6	   	  500	 10	  19	Wizard	Cavalry	Missiles Imm		Wind Walking		27864	  1	   	   	
+ 16	High Men	Ranger	  1	  8	  9	  5	  6	 13	  	  3.0	Arrow	  8	   	  400	  6	  25	Bow	Cavalry, Forester, Mountaineer	Poison Imm				27865	  3	   	   	
+ 17	Draconian	Draconian	  1	 10	  5	  5	  6	 13	  	  3.0	Fire Breath	   	   	  400	  8	   1	Fighter	Flying		Flyer			27866	  1	   	   	
+ 18	High Men	Witch	  1	  1	 12	  5	  5	 10	  	  3.0	Chaos Fireball	  6	   	  500	  8	   3	Wizard	Cavalry	Missiles Imm				27867	  1	   	   	
+ 19	High Men	Golden One	  1	 10	 10	  7	  9	 11	  	  3.0	Chaos Fireball	  8	   	  400	 10	  34	Fighter Wizard	Cavalry					27868	  1	   	   	
+ 20	High Men	Ninja	  1	 10	   	  6	  5	 12	  	  3.0		   	   	  600	 10	  29	Fighter	Cavalry			Invisibility		27869	  1	   	   	
+ 21	High Men	Rogue	  1	 11	   	  6	  5	 13	  	  3.0		   	   	  250	  6	   8	Fighter	Cavalry					27870	  1	   	   	
+ 22	High Men	Amazon	  1	 10	  4	  5	  5	 12	  	  3.0	Thrown Weapons	   	   	  600	 10	  13	Fighter	Cavalry					27871	  1	   	   	
+ 23	High Men	Warlock	  1	  1	 12	  5	  8	 10	  	  3.0	Chaos Lightning	  6	   	  600	 10	  21	Wizard	Cavalry	Missiles Imm				27872	  1	   	   	
+ 24	High Men	Unknown	  1	  9	  9	  6	  8	 13	  	  3.0	Chaos Fireball	  6	   	  600	 10	   5	Fighter Wizard	Swimming					27873	  1	   	   	
+ 25	High Men	Illusionist	  1	  1	  9	  6	  6	 10	  	  3.0	Sorcery Illusion	  6	   	  999	 12	  24	Wizard	Cavalry	Missiles Imm		Land Corruption	Illusionary attack	27874	  1	   	   	
+ 26	High Men	Swordsman	  1	 10	   	  7	  6	 15	  	  3.0		   	   	  999	 12	   7	Fighter	Cavalry					27875	  1	   	   	
+ 27	High Men	Priestess	  1	  2	 12	  7	  8	 10	  	  3.0	Nature Priest	  9	   	  999	 12	  23	Wizard	Cavalry			Healer, Purify		27876	  1	   	   	
+ 28	High Men	Paladin	  1	 11	   	  7	  6	 13	  	  3.0		   	   	  999	 12	  14	Fighter	Cavalry	Illusions Imm		Healer	Armor Piercing, First Strike	27877	  1	   	   	
+ 29	High Men	Black Knight	  1	 11	   	  7	  6	 15	  	  3.0		   	   	  999	 12	  16	Fighter	Cavalry	Death Imm			Armor Piercing, First Strike	27878	  1	   	   	
+ 30	High Elf	Elven Archer	  1	  5	 12	  8	  8	 11	+1	  3.0	Nature Green	  8	   	  999	 12	  27	Bow	Cavalry, Forester					27879	  4	   	   	
+ 31	High Men	Knight	  1	 12	   	  7	  6	 18	  	  3.0		   	   	  999	 12	   9	Fighter	Cavalry			Negate First Strike		27880	  1	   	   	
+ 32	High Men	Necromancer	  1	  1	 11	  7	  8	 10	  	  3.0	Chaos Deathbolt	  6	 -3	  999	 12	  11	Wizard	Cavalry	Missiles Imm, Illusions Imm, Death Imm			Life Stealing	27881	  1	   	   	
+ 33	High Men	Chaos Warrior	  1	 12	 12	  7	  7	 13	  	  3.0	Chaos Lightning	  6	   	  999	 12	   4	Fighter Wizard	Cavalry				Armor Piercing	27882	  1	   	   	
+ 34	Life	Chosen	  1	 12	   	  8	 12	 13	  	  4.0		   	  1	  230	 12	   0	Fighter	Cavalry		Holy Bonus			27883	  4	   	   	
+ 35	Generic	Trireme	  1	 12	   	  4	  6	 15	  	  3.0		   	   	   60	  0	Shipwright Guild	-	Sailing		Standard			27884	  1	  8	   	
+ 36	Generic	Galley	  1	 14	 10	  4	  7	 20	  	  3.0	Arrow	  8	   	  100	  0	Shipwright Guild	Fighters Guild	Sailing		Standard			27885	  2	  8	   	
+ 37	Generic	Catapult	  1	   	  9	  2	  3	 10	+2	  1.0	Rock	 10	   	   62	  1	Mechanicians Guild	-			Standard	Wall Crusher, Long Range		27886	  1	   	   	
+ 38	Generic	Warship	  1	 16	 14	  5	  7	 25	  	  4.0	Rock	 10	   	  140	  0	Maritime Guild	-	Sailing		Standard	Long Range		27887	  2	  8	   	
+ 39	Lizardman	Carrack	  1	 14	  8	  4	  6	 15	  	  4.0	Arrow	  6	   	   80	  0	Water	Foresters Guild	Sailing		Standard			27888	  2	  8	   	
+ 40	Barbarian	Swordsmen	  6	  3	  2	  3	  3	  1	+1	  2.0	Thrown Weapons	   	   	   25	  1	Smithy	-	Forester, Mountaineer		Standard	Large Shield		27889	  1	   	   	
+ 41	Barbarian	Bowmen	  6	  1	  3	  1	  3	  1	+1	  2.0	Arrow	  8	   	   30	  1	Sawmill	Smithy	Forester, Mountaineer		Standard			27890	  1	   	   	
+ 42	Barbarian	Cavalry	  4	  5	  3	  2	  3	  3	+1	  5.0	Thrown Weapons	   	   	   40	  1	Stable	Smithy	Cavalry		Standard		First Strike	27891	  1	   	   	
+ 43	Barbarian	Shaman	  4	  2	  3	  3	  5	  1	+1	  2.0	Nature Priest	  4	   	   50	  2	Shrine	-	Forester, Mountaineer		Standard, Healing Spell	Healer, Purify		27892	  2	   	   	
+ 44	Generic	Settlers	  1	   	   	  1	  5	 10	  	  1.0		   	   	  150	  1	-	-				Create Outpost		27893	  1	   	   	
+ 45	Barbarian	Berserkers	  6	  7	  3	  3	  3	  3	+1	  3.0	Thrown Weapons	   	   	  100	  2	Fighters Guild	-	Forester, Mountaineer					27894	  1	   	   	
+ 46	Beastmen	Spearmen	  6	  3	   	  1	  3	  2	  	  2.0		   	   	   10	  0	-	-			Standard			27895	  1	   	   	
+ 47	Beastmen	Swordsmen	  6	  4	   	  3	  4	  2	  	  2.0		   	   	   25	  1	Smithy	-			Standard	Large Shield		27896	  1	   	   	
+ 48	Beastmen	Halberdiers	  6	  6	   	  4	  5	  3	  	  2.0		   	   	   60	  2	Fighters Guild	-			Standard	Negate First Strike		27897	  1	   	   	
+ 49	Beastmen	Bowmen	  6	  2	  3	  1	  4	  2	  	  2.0	Arrow	  8	   	   30	  1	Sawmill	Smithy			Standard			27898	  1	   	   	
+ 50	Beastmen	Priests	  4	  4	  5	  4	  8	  3	  	  2.0	Nature Priest	  4	   	  100	  3	Parthenon	-			Standard, Healing Spell	Healer, Purify		27899	  2	   	   	
+ 51	Beastmen	Magicians	  4	  2	  7	  3	  8	  2	  	  3.0	Chaos Fireball	  4	   	  120	  3	Wizards Guild	Smithy		Missiles Imm	Caster 20 MP, Standard			27900	  1	   	   	
+ 52	Beastmen	Engineers	  6	  2	   	  1	  4	  2	  	  1.0		   	   	   30	  1	Builders Hall	-			Standard	Wall Crusher		27901	  1	   	  1	
+ 53	Barbarian	Settlers	  1	  1	   	  1	  5	 20	  	  1.0		   	   	  150	  1	Fantastic Stable	-				Create Outpost		27902	  1	   	   	
+ 54	Beastmen	Centaurs	  4	  5	  5	  3	  5	  4	  	  4.0	Arrow	  6	   	   90	  2	Stable	Fighters Guild	Cavalry					27903	  1	   	   	
+ 55	Beastmen	Manticores	  3	  7	  1	  3	  8	  6	+1	  3.0	Arrow	  2	  4	  160	  2	Fantastic Stable	-	Flying		Weapon Imm, Flyer		Poison attack	27904	  3	   	   	
+ 56	Beastmen	Minotaurs	  2	 12	   	  5	  7	 12	+2	  3.0		   	   	  200	  5	Armorers Guild	-				Large Shield		27905	  1	   	   	
+ 57	Dark Elf	Spearmen	  6	  2	  1	  1	  5	  1	  	  2.0	Chaos Drow	  4	   	   10	  0	-	-			Standard			27906	  2	   	   	
+ 58	Dark Elf	Swordsmen	  6	  3	  2	  3	  6	  1	  	  2.0	Chaos Drow	  4	   	   25	  1	Smithy	-			Standard	Large Shield		27907	  2	   	   	
+ 59	Dark Elf	Halberdiers	  6	  5	  3	  4	  7	  2	  	  2.0	Chaos Drow	  4	   	   60	  2	Fighters Guild	-			Standard			27908	  2	   	   	
+ 60	Dark Elf	Cavalry	  4	  5	  3	  2	  6	  3	  	  5.0	Chaos Drow	  4	   	   40	  1	Smithy	Stable	Cavalry		Standard		First Strike	27909	  2	   	   	
+ 61	Dark Elf	Priests	  4	  3	  7	  4	 10	  2	  	  2.0	Nature Priest	  4	   	  120	  3	Parthenon	-			Standard, Healing Spell	Healer, Purify		27910	  2	   	   	
+ 62	Dark Elf	Apprentices	  6	  2	  3	  2	  6	  1	  	  2.0	Chaos Drow	  4	   	   40	  1	Smithy	Library			Caster 20 MP, Caster 40 MP	Large Shield		27911	  2	   	   	
+ 63	Dark Elf	Nightblades	  6	  5	   	  4	  7	  3	  	  2.0		   	  2	  150	  4	Armorers Guild	-				Invisibility	Poison attack	27912	  2	   	   	
+ 64	Dark Elf	Warlocks	  4	  1	  9	  4	  9	  1	  	  3.0	Chaos Fireball	  4	   	  160	  3	Wizards Guild	-		Missiles Imm	Doombolt Spell			27913	  2	   	   	
+ 65	Dark Elf	Nightmares	  2	  8	  8	  4	 12	  8	+2	  4.0	Chaos Drow	  4	   	  200	  5	Fantastic Stable	-	Flying		Flyer			27914	  2	   	   	
+ 66	Draconian	Spearmen	  6	  2	  1	  2	  4	  1	  	  2.0	Fire Breath	   	   	   10	  0	-	-	Flying		Flyer, Standard			27915	  1	   	   	
+ 67	Draconian	Swordsmen	  6	  3	  2	  4	  5	  1	  	  2.0	Fire Breath	   	   	   25	  1	Smithy	-	Flying		Flyer, Standard	Large Shield		27916	  1	   	   	
+ 68	Draconian	Halberdiers	  6	  5	  3	  5	  6	  2	  	  2.0	Fire Breath	   	   	   60	  2	Fighters Guild	-	Flying		Flyer, Standard			27917	  1	   	   	
+ 69	Draconian	Bowmen	  5	  1	  3	  1	  5	  1	  	  2.0	Arrow	  4	   	   40	  1	Sawmill	Smithy	Flying		Flyer, Standard			27918	  1	   	   	
+ 70	Draconian	Saints	  5	  2	  4	  5	  7	  2	  	  2.0	Nature Priest	  4	   	  100	  2	Shrine	Parthenon	Flying		Flyer, Standard, Healing Spell	Healer, Purify		27919	  2	   	   	
+ 71	Draconian	Magicians	  4	  1	  7	  4	  9	  1	  	  3.0	Chaos Fireball	  4	   	  120	  3	Wizards Guild	Smithy	Flying	Missiles Imm	Flyer, Caster 20 MP, Standard			27920	  1	   	   	
+ 72	Orc	Horde	  8	  6	   	  5	  5	  2	  	  2.0		   	   	   75	  1	Armorers Guild	-			Standard	Large Shield, Negate First Strike		27921	  1	   	   	
+ 73	Barbarian	Settlers	  1	   	   	  2	  5	 10	  	  1.0		   	   	  150	  1	Fantastic Stable	-	Flying		Flyer	Create Outpost		27922	  1	   	   	
+ 74	Draconian	Doom Drakes	  2	 10	  7	  5	  7	 10	  	  5.0	Fire Breath	   	   	  210	  5	Stable	Armorers Guild	Flying		Flyer, Cause Fear Spell			27923	  2	   	   	
+ 75	Draconian	Air Ship	  1	  5	 15	  5	  8	 20	  	  4.0	Rock	 10	   	  200	  4	Maritime Guild	-	Flying		Flyer	Wall Crusher, Wind Walking		27924	  2	   	   	
+ 76	Dwarven	Swordsmen	  6	  3	   	  3	  6	  2	  	  2.0		   	   	   25	  1	Smithy	-	Mountaineer		Standard	Large Shield		27925	  1	   	   	
+ 77	Dwarven	Halberdiers	  6	  5	   	  4	  7	  3	  	  2.0		   	   	   60	  2	Fighters Guild	-	Mountaineer		Standard	Negate First Strike		27926	  1	   	   	
+ 78	Dwarven	Engineers	  6	  1	   	  1	  8	  2	  	  1.0		   	   	   40	  1	Builders Hall	-	Mountaineer		Standard	Wall Crusher		27927	  1	   	  2	
+ 79	Dwarven	Hammerhands	  6	  8	   	  4	 10	  4	  	  2.0		   	   	  140	  4	Armorers Guild	-	Mountaineer					27928	  1	   	   	
+ 80	Dwarven	Steam Cannon	  1	   	 15	  5	  9	 12	  	  1.0	Rock	 10	   	  100	  2	University	Smithy	Mountaineer	Poison Imm		Wall Crusher, Long Range		27929	  1	   	   	
+ 81	Dwarven	Golem	  1	 14	   	  7	 15	 20	  	  3.0		   	   	  180	  5	Fighters Guild	Mechanicians Guild		Fire Imm, Stoning Imm, Cold Imm, Death Imm, Poison Imm		Wall Crusher		27930	  1	   	   	
+ 82	Barbarian	Spearmen	  6	  2	  1	  1	  2	  1	+1	  2.0	Thrown Weapons	   	   	   10	  0	-	-	Forester, Mountaineer		Standard			27931	  1	   	   	
+ 83	Gnoll	Spearmen	  6	  4	   	  1	  3	  1	  	  3.0		   	   	   10	  0	-	-			Standard			27932	  1	   	   	
+ 84	Gnoll	Swordsmen	  6	  5	   	  3	  4	  1	  	  3.0		   	   	   25	  1	Smithy	-			Standard	Large Shield		27933	  1	   	   	
+ 85	Gnoll	Halberdiers	  6	  7	   	  4	  5	  2	  	  3.0		   	   	   60	  2	Fighters Guild	-			Standard	Negate First Strike		27934	  1	   	   	
+ 86	Gnoll	Jackal Riders	  8	  6	   	  3	  5	  3	  	  4.0		   	   	  150	  2	Armorers Guild	Stable			Cause Fear Spell			27935	  1	   	   	
+ 87	Barbarian	Gladiators	  3	  5	  4	  6	  5	  6	+2	  3.0	Thrown Weapons	   	   	  120	  3	Armory	-	Forester, Mountaineer			Large Shield		27936	  1	   	   	
+ 88	Gnoll	Wolf Riders	  4	  7	   	  3	  5	  5	  	  5.0		   	   	   80	  2	Stable	-	Forester, Mountaineer					27937	  3	   	   	
+ 89	Halfling	Spearmen	  8	  1	   	  1	  3	  1	  	  2.0		   	   	   15	  0	-	-			Lucky, Standard			27938	  1	   	   	
+ 90	Halfling	Swordsmen	  8	  2	   	  3	  4	  1	  	  2.0		   	   	   36	  1	Smithy	-			Lucky, Standard	Large Shield		27939	  1	   	   	
+ 91	Halfling	Magicians	  4	  1	  7	  3	  8	  1	  	  3.0	Chaos Fireball	  4	   	  150	  3	Wizards Guild	Smithy		Missiles Imm	Lucky, Caster 20 MP, Standard			27940	  1	   	   	
+ 92	Halfling	Shaman	  4	  1	  3	  3	  6	  1	  	  2.0	Nature Priest	  4	   	   75	  2	Shrine	-			Lucky, Standard, Healing Spell	Healer, Purify		27941	  1	   	   	
+ 93	Barbarian	Spellserkers	  4	  3	  5	  4	  6	  4	+1	  3.0	Thrown Weapons	   	   	  120	  3	Wizards Guild	-	Forester, Mountaineer	Missiles Imm	Caster 20 MP			27942	  1	   	   	
+ 94	Halfling	Slingers	  8	  1	  4	  1	  4	  1	  	  2.0	Bullet	  6	   	  100	  1	Fighters Guild	-			Lucky			27943	  1	   	   	
+ 95	High Elf	Spearmen	  6	  2	   	  1	  4	  1	+1	  2.0		   	   	   10	  0	-	-	Forester		Standard			27944	  1	   	   	
+ 96	High Elf	Swordsmen	  6	  3	   	  3	  5	  1	+1	  2.0		   	   	   25	  1	Smithy	-	Forester		Standard	Large Shield		27945	  1	   	   	
+ 97	High Elf	Halberdiers	  6	  5	   	  4	  6	  2	+1	  2.0		   	   	   60	  2	Fighters Guild	-	Forester		Standard	Negate First Strike		27946	  1	   	   	
+ 98	High Elf	Cavalry	  4	  5	   	  2	  5	  3	+1	  5.0		   	   	   40	  1	Stable	-	Cavalry, Forester		Standard		First Strike	27947	  1	   	   	
+ 99	High Elf	Magicians	  4	  1	  7	  3	  9	  1	+1	  3.0	Chaos Fireball	  4	   	  120	  3	Wizards Guild	Smithy	Forester	Missiles Imm	Caster 20 MP, Standard			27948	  1	   	   	
+100	Barbarian	Settlers	  1	   	   	  1	  5	 40	  	  1.0		   	  1	  150	  1	Fantastic Stable	-				Create Outpost, Regeneration		27949	  1	   	   	
+101	High Elf	Longbowmen	  6	  1	  3	  2	  5	  1	+1	  2.0	Arrow	  8	   	   50	  1	Foresters Guild	Smithy	Forester			Long Range		27950	  1	   	   	
+102	High Elf	Elven Lords	  4	  5	   	  6	 10	  4	+2	  4.0		   	   	  160	  4	Armorers Guild	-	Cavalry, Forester	Poison Imm			Armor Piercing, First Strike	27951	  1	   	   	
+103	High Elf	Pegasai	  4	  4	  3	  4	  8	  4	+1	  5.0	Arrow	  8	   	  120	  2	Fantastic Stable	-	Flying		Flyer			27952	  3	   	   	
+104	High Men	Spearmen	  6	  2	   	  1	  1	  1	  	  2.0		   	   	   10	  0	-	-			Standard			27953	  1	   	   	
+105	High Men	Swordsmen	  6	  3	   	  3	  2	  1	  	  2.0		   	   	   25	  1	Smithy	-			Standard	Large Shield		27954	  1	   	   	
+106	High Men	Bowmen	  6	  1	  3	  1	  2	  1	  	  2.0	Arrow	  8	   	   30	  1	Sawmill	Smithy			Standard			27955	  1	   	   	
+107	High Men	Cavalry	  4	  5	   	  2	  2	  3	  	  5.0		   	   	   40	  1	Stable	-	Cavalry		Standard		First Strike	27956	  1	   	   	
+108	High Men	Priests	  4	  3	  5	  4	  6	  2	  	  2.0	Nature Priest	  4	  1	  100	  3	Parthenon	-			Standard, Healing Spell, Resistance to All	Healer, Purify		27957	  2	   	   	
+109	High Men	Magicians	  6	  1	  7	  3	  6	  1	  	  3.0	Chaos Fireball	  4	   	  120	  3	Wizards Guild	Smithy		Missiles Imm	Caster 20 MP, Standard			27958	  1	   	   	
+110	High Men	Engineers	  6	  1	   	  1	  4	  1	  	  1.0		   	   	   40	  1	Builders Hall	-			Standard	Wall Crusher		27959	  1	   	  1	
+111	High Men	Crusaders	  8	  5	   	  4	  6	  2	  	  2.0		   	   	   60	  2	Fighters Guild	Shrine			Healing Spell	Large Shield		27960	  1	   	   	
+112	High Men	Pikemen	  8	  4	   	  4	  4	  2	  	  2.0		   	   	   75	  2	Fighters Guild	-				Negate First Strike	Armor Piercing	27961	  1	   	   	
+113	High Men	Paladins	  4	  6	   	  5	  8	  5	  	  4.0		   	  1	  240	  5	Cathedral	Armorers Guild	Cavalry	Illusions Imm, Death Imm	Holy Bonus		Armor Piercing, First Strike	27962	  1	   	   	
+114	Klackon	Spearmen	  6	  2	   	  3	  3	  1	  	  2.0		   	   	   10	  0	-	-			Standard			27963	  1	   	   	
+115	Klackon	Swordsmen	  6	  3	   	  5	  4	  1	  	  2.0		   	   	   25	  1	Smithy	-			Standard	Large Shield		27964	  1	   	   	
+116	Klackon	Halberdiers	  6	  5	   	  6	  5	  2	  	  2.0		   	   	   60	  2	Fighters Guild	-			Standard	Negate First Strike		27965	  1	   	   	
+117	Klackon	Engineers	  6	  1	   	  1	  4	  1	  	  1.0		   	   	   20	  1	Builders Hall	-			Standard	Wall Crusher		27966	  1	   	  1	
+118	High Men	Knights	  4	  6	   	  5	  5	  3	  	  5.0		   	   	   60	  3	Stable	Fighters Guild	Cavalry				First Strike	27967	  1	   	   	
+119	Klackon	Stag Beetle	  1	 15	  5	  7	  7	 20	  	  4.0	Fire Breath	   	   	  160	  2	Stable	Armorers Guild						27968	  1	   	   	
+120	Lizardman	Spearmen	  6	  2	   	  1	  2	  2	  	  2.0		   	   	   10	  0	-	-	Swimming		Standard			27969	  1	   	   	
+121	Lizardman	Swordsmen	  6	  3	   	  3	  3	  2	  	  2.0		   	   	   25	  1	Smithy	-	Swimming		Standard	Large Shield		27970	  1	   	   	
+122	Lizardman	Halberdiers	  6	  5	   	  4	  4	  3	  	  2.0		   	   	   60	  2	Fighters Guild	-	Swimming		Standard	Negate First Strike		27971	  1	   	   	
+123	Lizardman	Javelineers	  6	  5	  4	  3	  5	  2	  	  2.0	Arrow	  6	   	   75	  2	Fighters Guild	-	Swimming					27972	  1	   	   	
+124	Lizardman	Shaman	  4	  2	  3	  2	  5	  2	  	  2.0	Nature Priest	  4	   	   60	  2	Shrine	-	Swimming		Standard, Healing Spell	Healer, Purify		27973	  2	   	   	
+125	Barbarian	Settlers	  1	   	   	  1	  3	 20	  	  2.0		   	   	  120	  1	Fantastic Stable	-	Swimming			Create Outpost		27974	  1	   	   	
+126	Lizardman	Dragon Turtle	  1	 10	  5	  9	 12	 20	  	  2.0	Lightning Breath	   	   	  100	  1	Armorers Guild	-	Swimming	Fire Imm				27975	  1	   	   	
+127	Nomad	Spearmen	  6	  2	  1	  1	  6	  1	  	  2.0	Arrow	  4	   	   10	  0	-	-			Standard			27976	  1	   	   	
+128	Nomad	Swordsmen	  6	  3	  2	  3	  7	  1	  	  2.0	Arrow	  4	   	   25	  1	Smithy	-			Standard	Large Shield		27977	  1	   	   	
+129	Troll	Magicians	  4	  4	  7	  2	  8	  4	  	  2.0	Chaos Fireball	  4	  1	  180	  3	Wizards Guild	Smithy		Missiles Imm	Caster 20 MP, Standard	Regeneration		27978	  1	   	   	
+130	Nomad	Priests	  4	  3	  5	  4	 11	  2	  	  2.0	Nature Priest	  4	   	  100	  3	Parthenon	-			Standard, Healing Spell	Healer, Purify		27979	  2	   	   	
+131	Nomad	Magicians	  4	  1	  7	  3	 11	  1	  	  3.0	Chaos Fireball	  4	   	  120	  3	Wizards Guild	Smithy		Missiles Imm	Caster 20 MP, Standard			27980	  1	   	   	
+132	Troll	War Trolls	  4	  8	   	  4	  6	  8	  	  3.0		   	  1	  150	  3	Armorers Guild	-				Regeneration		27981	  1	   	   	
+133	Nomad	Horsebowmen	  4	  4	  4	  2	  7	  3	  	  4.0	Arrow	  4	   	   50	  1	Stable	Sawmill	Cavalry				First Strike	27982	  1	   	   	
+134	Nomad	Pikemen	  6	  4	   	  4	  8	  2	  	  2.0		   	   	   75	  2	Fighters Guild	-				Negate First Strike	Armor Piercing	27983	  1	   	   	
+135	Nomad	Rangers	  4	  6	  7	  3	  8	  3	  	  3.0	Arrow	  6	   	  150	  3	Foresters Guild	Armorers Guild	Forester, Mountaineer	Poison Imm		Long Range		27984	  3	   	   	
+136	Nomad	Griffins	  2	  9	   	  5	  8	 10	  	  4.0		   	   	  180	  3	Fantastic Stable	Smithy	Flying		Flyer		Armor Piercing, First Strike	27985	  1	   	   	
+137	Orc	Spearmen	  6	  2	   	  1	  3	  1	  	  2.0		   	   	   10	  0	-	-			Standard			27986	  1	   	   	
+138	Orc	Swordsmen	  6	  3	   	  3	  4	  1	  	  2.0		   	   	   25	  0	Smithy	-			Standard	Large Shield		27987	  1	   	   	
+139	Orc	Halberdiers	  6	  5	   	  4	  5	  2	  	  2.0		   	   	   60	  0	Fighters Guild	-			Standard	Negate First Strike		27988	  1	   	   	
+140	Orc	Bowmen	  6	  1	  3	  1	  4	  1	  	  2.0	Arrow	  8	   	   30	  0	Sawmill	Smithy			Standard			27989	  1	   	   	
+141	Orc	Cavalry	  4	  5	   	  2	  4	  3	  	  5.0		   	   	   40	  0	Stable	-	Cavalry		Standard		First Strike	27990	  1	   	   	
+142	Orc	Shaman	  4	  2	  3	  3	  6	  1	  	  2.0	Nature Priest	  4	   	   50	  0	Shrine	-			Standard, Healing Spell	Healer, Purify		27991	  2	   	   	
+143	Orc	Magicians	  4	  1	  7	  3	  8	  1	  	  3.0	Chaos Fireball	  4	   	  120	  1	Wizards Guild	Smithy		Missiles Imm	Caster 20 MP, Standard			27992	  1	   	   	
+144	Orc	Engineers	  6	  1	   	  1	  4	  1	  	  1.0		   	   	   40	  1	Builders Hall	-			Standard	Wall Crusher		27993	  1	   	  1	
+145	Troll	War Mammoths	  3	 12	   	  6	  8	 12	  	  2.0		   	   	  180	  5	Stable	Armorers Guild		Cold Imm		Wall Crusher	First Strike	27994	  1	   	   	
+146	Orc	Wyvern Riders	  2	  7	   	  5	  7	 10	  	  5.0		   	  5	  150	  2	Fantastic Stable	-	Flying		Flyer		Poison attack	27995	  1	   	   	
+147	Troll	Spearmen	  4	  4	   	  1	  5	  4	  	  2.0		   	  1	   15	  0	-	-			Standard	Regeneration		27996	  1	   	   	
+148	Troll	Swordsmen	  4	  5	   	  3	  5	  4	  	  2.0		   	  1	   40	  1	Smithy	-			Standard	Large Shield, Regeneration		27997	  1	   	   	
+149	Troll	Halberdiers	  4	  7	   	  4	  5	  6	  	  2.0		   	  1	   90	  2	Fighters Guild	-			Standard	Regeneration, Negate First Strike		27998	  1	   	   	
+150	Troll	Shaman	  4	  4	  3	  3	  6	  4	  	  2.0	Nature Priest	  4	  2	   80	  2	Shrine	-			Standard, Healing Spell	Healer, Regeneration, Purify		27999	  2	   	   	
+151	Barbarian	Settlers	  1	   	   	  1	  5	 10	+1	  1.0		   	   	  150	  1	Fantastic Stable	-	Forester		Standard	Create Outpost		28000	  1	   	   	
+152	Nature	Boars	  3	  6	   	  5	  5	  5	+1	  3.0		   	   	   50	  1	Armorers Guild	-	Forester			Summoned Unit		28001	  1	   	   	
+153	Chaos	Fire Elemental	  1	 12	   	  5	  4	 10	  	  2.0		   	   	   70	  1	Armorers Guild	-		Fire Imm, Stoning Imm, Poison Imm	Weapon Imm	Summoned Unit		28002	  1	   	   	
+154	Arcane	Magic Spirit	  1	  5	   	  4	  8	 10	  	  2.0		   	   	   30	  1	   6	    	Swimming	Poison Imm		Summoned Unit, Meld With Node, Non Corporeal		28003	  1	   	   	
+155	Chaos	Hell Hounds	  4	  4	  4	  2	  5	  4	+1	  3.0	Fire Breath	   	   	   40	  1	   6	    				Summoned Unit		28004	  2	   	   	
+156	Chaos	Gargoyles	  4	  5	   	  9	  9	  4	+1	  3.0		   	   	  130	  1	   6	    	Flying	Stoning Imm, Poison Imm		Summoned Unit		28005	  1	   	   	
+157	Chaos	Fire Giant	  1	 18	 12	  5	  7	 18	+1	  3.0	Chaos Fireball	  3	   	  210	  3	   6	    	Mountaineer	Fire Imm	Fire Ball Spell	Summoned Unit, Wall Crusher		28006	  2	   	   	
+158	Sorcery	Water Elemental	  1	 14	 14	  7	  7	 15	+2	  3.0	Nature Icebolt	  4	   	  210	  3	   6	    	Swimming	Fire Imm, Poison Imm	Weapon Imm	Summoned Unit		28007	  1	   	   	
+159	Chaos	Chaos Spawn	  1	  1	  4	  8	 12	 22	  	  2.0	Multiple Gaze	   	  4	  238	  8	   6	    	Flying	Illusions Imm	Flyer, Cause Fear Spell	Summoned Unit	Poison attack	28008	  4	   	   	
+160	Chaos	Chimera	  4	 10	  6	  5	  8	  8	+1	  3.0	Fire Breath	   	   	  210	  4	   6	    	Flying		Flyer	Summoned Unit		28009	  1	   	   	
+161	Chaos	Doom Bat	  1	 16	   	  7	 10	 30	+2	  6.0		   	   	  360	  7	   6	    	Flying		Flyer, Immolation	Summoned Unit	Automatic Damage	28010	  2	   	   	
+162	Chaos	Efreet	  1	 15	 18	  7	  9	 27	+2	  4.0	Chaos Fireball	  8	   	  330	  9	   6	    	Flying	Fire Imm	Flyer, Caster 40 MP, Immolation	Summoned Unit		28011	  3	   	   	
+163	Chaos	Hydra	  9	  9	  6	  4	 12	 10	+1	  2.0	Fire Breath	   	  7	  300	 11	   6	    				Summoned Unit, Regeneration	Simultaneous Damage COMBAT	28012	  1	   	   	
+164	Chaos	Great Drake	  1	 35	 35	 11	 15	 40	+3	  4.0	Fire Breath	   	   	  550	 15	   6	    	Flying		Flyer	Summoned Unit	Simultaneous Damage COMBAT	28013	  3	   	   	
+165	Death	Skeletons	  7	  3	   	  4	  3	  1	+1	  2.0		   	   	   40	  0	   6	    		Missiles Imm, Illusions Imm, Cold Imm, Death Imm, Poison Imm		Summoned Unit		28014	  1	   	   	
+166	Death	Ghouls	  4	  5	  4	  3	  6	  3	  	  2.0	Chaos Deathbolt	  4	  1	  100	  1	   6	    		Illusions Imm, Cold Imm, Death Imm, Poison Imm		Summoned Unit, Create Undead	Poison attack	28015	  1	   	   	
+167	Death	Night Stalker	  1	  7	   	  5	  8	 13	+1	  3.0	Death Gaze	   	 -3	  239	  1	   6	    		Illusions Imm, Cold Imm, Death Imm, Poison Imm	Weapon Imm	Summoned Unit, Invisibility		28016	  1	   	   	
+168	Death	Werewolves	  6	  6	   	  3	  4	  5	+2	  3.0		   	   	  130	  2	   6	    		Cold Imm, Death Imm	Weapon Imm	Summoned Unit, Regeneration		28017	  1	   	   	
+169	Death	Demon	  1	 14	   	  5	  7	 12	+1	  2.0		   	   	  238	  3	   6	    	Flying	Missiles Imm, Illusions Imm, Death Imm	Weapon Imm, Flyer, Caster 40 MP	Summoned Unit		28018	  1	   	   	
+170	Death	Wraiths	  4	 10	   	  6	  8	  8	+2	  5.0		   	 -3	  360	  5	   6	    	Flying	Illusions Imm, Cold Imm, Death Imm, Poison Imm	Weapon Imm, Flyer	Summoned Unit, Non Corporeal	Life Stealing	28019	  1	   	   	
+171	Death	Shadow Demons	  4	  5	  5	  4	  6	  5	+2	  2.0	Chaos Deathbolt	  8	  2	  240	  4	   6	    	Flying	Illusions Imm, Cold Imm, Death Imm, Poison Imm	Weapon Imm, Flyer	Summoned Unit, Plane Shift, Non Corporeal, Regeneration		28020	  1	   	   	
+172	Death	Death Knights	  4	 12	   	  9	 10	  8	+3	  5.0		   	 -5	  550	  8	   6	    	Flying	Illusions Imm, Cold Imm, Death Imm, Poison Imm	Weapon Imm, Flyer	Summoned Unit, Non Corporeal	Armor Piercing, First Strike, Life Stealing, Simultaneous Damage COMBAT	28021	  3	   	   	
+173	Death	Demon Lord	  1	 25	 20	  8	 13	 35	+3	  4.0	Chaos Deathbolt	  8	 -2	  610	 18	   6	    	Flying	Missiles Imm, Illusions Imm, Death Imm	Weapon Imm, Flyer, Summon Demons 1, Summon Demons 2, Cause Fear Spell	Summoned Unit, Land Corruption	Life Stealing, Simultaneous Damage COMBAT	28022	  5	   	   	
+174	Death	Zombies	  6	  4	   	  3	  3	  3	+1	  1.0		   	   	   70	  0	   6	    		Illusions Imm, Cold Imm, Death Imm		Summoned Unit, Create Undead		28023	  1	   	   	
+175	Life	Unicorns	  4	  6	   	  4	  7	  8	+2	  4.0		   	  2	  210	  4	   6	    	Teleporting	Poison Imm	Resistance to All	Summoned Unit		28024	  2	   	   	
+176	Life	Guardian Spirit	  1	  7	   	  6	 10	 10	+3	  2.0		   	  1	   55	  1	   6	    		Poison Imm	Resistance to All	Summoned Unit, Meld With Node, Non Corporeal		28025	  1	   	   	
+177	Life	Angel	  1	 18	   	  9	 11	 27	+2	  5.0		   	  1	  360	  8	   6	    	Flying	Illusions Imm	Flyer, Caster 20 MP, Caster 40 MP, Holy Bonus	Summoned Unit	Dispel Evil	28026	  4	   	   	
+178	Life	Arch Angel	  1	 21	   	 12	 18	 37	+4	  4.0		   	  2	  610	 18	   6	    	Flying	Illusions Imm	Flyer, Caster 40 MP, Holy Bonus	Summoned Unit, Healer, Wind Walking, Negate First Strike	Simultaneous Damage COMBAT	28027	  5	   	   	
+179	Nature	War Bears	  3	  7	   	  5	  6	  7	+1	  3.0		   	   	   70	  1	   6	    	Forester			Summoned Unit		28028	  1	   	   	
+180	Nature	Sprites	  5	  2	  4	  2	  8	  1	+1	  2.0	Nature Shimmer	  4	   	   69	  2	   6	    	Flying, Forester		Flyer	Summoned Unit		28029	  2	   	   	
+181	Nature	Cockatrices	  4	  4	   	  5	  7	  7	+1	  3.0		   	 -4	  210	  4	   6	    	Flying		Flyer	Summoned Unit	Stoning Touch	28030	  1	   	   	
+182	Nature	Great Lizard	  1	 18	   	  7	  7	 30	+2	  3.0		   	  2	  240	  5	   6	    				Summoned Unit, Regeneration		28031	  1	   	   	
+183	Nature	Giant Spiders	  4	  6	   	  5	  9	  5	+1	  5.0		   	  3	  130	  2	   6	    			Web Spell	Summoned Unit	Poison attack	28032	  1	   	   	
+184	Nature	Stone Giant	  1	 20	 20	 12	 10	 25	+2	  3.0	Rock	  3	   	  329	  5	   6	    	Mountaineer	Stoning Imm, Poison Imm		Summoned Unit, Wall Crusher		28033	  2	   	   	
+185	Nature	Colossus	  1	 25	 25	 12	 15	 37	+3	  3.0	Rock	  4	   	  610	 12	   6	    	Forester, Mountaineer	Stoning Imm, Illusions Imm, Poison Imm		Summoned Unit, Wall Crusher	First Strike, Simultaneous Damage COMBAT	28034	  4	   	   	
+186	Nature	Gorgons	  3	 15	   	  7	  9	 14	+2	  3.0	Stoning Gaze	   	 -3	  450	  8	   6	    				Summoned Unit	Simultaneous Damage COMBAT	28035	  1	   	   	
+187	Nature	Earth Elemental	  1	 25	   	  4	  8	 30	+1	  1.0		   	   	  237	  5	   6	    		Stoning Imm, Poison Imm		Summoned Unit, Wall Crusher		28036	  1	   	   	
+188	Nature	Behemoth	  1	 25	   	 15	 13	 42	+2	  3.0		   	  3	  450	 12	   6	    			Caster 40 MP	Summoned Unit, Regeneration	Simultaneous Damage COMBAT	28037	  1	   	   	
+189	Nature	Great Wyrm	  1	 36	   	  8	 14	 45	+3	  3.0		   	 25	  610	 15	   6	    	Merging			Summoned Unit	Armor Piercing, Poison attack, Simultaneous Damage COMBAT	28038	  1	   	   	
+190	Sorcery	Floating Island	  1	   	   	  0	  9	 45	  	  3.0		   	   	   30	  1	   6	    	Sailing	Stoning Imm, Death Imm, Poison Imm		Summoned Unit		28039	  1	  8	   	
+191	Sorcery	Phantom Beast	  1	 18	   	  0	  6	 25	+1	  2.0		   	   	   70	  3	   6	    	Swimming	Stoning Imm, Death Imm, Poison Imm		Summoned Unit, Non Corporeal	Illusionary attack	28040	  1	   	   	
+192	Sorcery	Phantom Warriors	  7	  3	   	  0	  4	  1	  	  2.0		   	   	   30	  1	   6	    	Swimming	Stoning Imm, Death Imm, Poison Imm		Summoned Unit, Non Corporeal	Illusionary attack	28041	  1	   	   	
+193	Sorcery	Storm Giant	  1	 18	 18	  7	  9	 25	+2	  3.0	Chaos Lightning	  5	   	  330	  5	   6	    		Missiles Imm		Summoned Unit, Wall Crusher	Armor Piercing	28042	  2	   	   	
+194	Sorcery	Air Elemental	  1	 15	   	  7	  9	 10	+1	  5.0		   	   	  239	  5	   6	    	Flying	Stoning Imm, Poison Imm	Weapon Imm, Flyer	Summoned Unit, Invisibility, Non Corporeal	Armor Piercing	28043	  1	   	   	
+195	Sorcery	Djinn	  1	 18	 15	  8	 12	 29	+3	  4.0	Sorcery Illusion	  8	   	  450	  9	   6	    	Flying, Teleporting		Flyer, Caster 20 MP, Caster 40 MP	Summoned Unit, Wind Walking	Simultaneous Damage COMBAT	28044	  3	   	   	
+196	Sorcery	Sky Drake	  1	 28	 21	 10	 14	 30	+3	  4.0	Lightning Breath	   	   	  611	 15	   6	    	Flying	Illusions Imm, Magic Imm	Flyer	Summoned Unit	Simultaneous Damage COMBAT	28045	  3	   	   	
+197	Sorcery	Nagas	  3	  5	   	  4	  7	  5	+1	  3.0		   	  3	   70	  2	   6	    	Swimming			Summoned Unit	First Strike, Poison attack	28046	  1	   	   	

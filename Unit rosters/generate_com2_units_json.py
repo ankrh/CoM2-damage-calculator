@@ -1,13 +1,11 @@
 """
 Generate a JSON file of CoM2 units from UNITS.INI.
 
-Shared stat fields (snake_case, matching MoM units_from_changeunit.json):
-  id, name, race, figures, hp, melee, defense, resist, to_hit
-  ranged, ranged_type, ammo   (omitted when absent)
-  breath, breath_type         (omitted when absent)
-
-CoM2-only fields (no MoM equivalent):
-  abilities (list), ini_name, category, hero_type, moves, cost, upkeep
+Fields match the MoM/CoM1 JSON schema:
+  id, name, race, category, figures, hp, melee, defense, resist, moves, cost, upkeep
+  ranged, ranged_type, ammo         (omitted when absent)
+  thrown_breath, thrown_breath_type (omitted when absent)
+  abilities                         (omitted when empty)
 """
 
 import json
@@ -20,28 +18,68 @@ RACE_NAMES = {
     15: 'Arcane', 16: 'Nature', 17: 'Sorcery', 18: 'Chaos', 19: 'Life', 20: 'Death',
 }
 
-# RangedType ID -> calculator ranged type string (mirrors index.html RANGED_TYPE_MAP)
+# RangedType ID -> ranged type string (matching MoM/CoM1 JSON format)
 RANGED_TYPE_MAP = {
-    10: 'rock',      # boulder / catapult
-    11: 'rock',      # cannon
-    20: 'missile',
-    21: 'missile',   # sling
-    30: 'magic_c',   # chaos — lightning bolt
-    31: 'magic_c',   # chaos — fire bolt
-    32: 'magic_s',   # sorcery — ice bolt / illusion ball
-    33: 'magic_c',   # chaos — death bolt
-    34: 'magic_s',   # sorcery
-    35: 'magic_n',   # nature — priest sparkles
-    36: 'magic_c',   # chaos — drow sparkles
-    37: 'magic_n',   # nature — sprite shimmer
-    38: 'magic_n',   # nature — green bolt
-    39: 'magic_c',   # chaos (misc)
-    40: 'magic_n',   # nature (misc)
+    10: 'Boulder',   # boulder / catapult
+    11: 'Boulder',   # cannon
+    20: 'Missile',
+    21: 'Missile',   # sling
+    30: 'Magic(C)',  # chaos — lightning bolt
+    31: 'Magic(C)',  # chaos — fire bolt
+    32: 'Magic(S)',  # sorcery — ice bolt / illusion ball
+    33: 'Magic(C)',  # chaos — death bolt
+    34: 'Magic(S)',  # sorcery
+    35: 'Magic(N)',  # nature — priest sparkles
+    36: 'Magic(C)',  # chaos — drow sparkles
+    37: 'Magic(N)',  # nature — sprite shimmer
+    38: 'Magic(N)',  # nature — green bolt
+    39: 'Magic(C)',  # chaos (misc)
+    40: 'Magic(N)',  # nature (misc)
 }
 
 # Realm lookup for fantastic creatures (Race >= 15)
 REALM_NAMES = {
     15: 'Arcane', 16: 'Nature', 17: 'Sorcery', 18: 'Chaos', 19: 'Life', 20: 'Death',
+}
+
+# INI ability key -> canonical name matching MoM/CoM1 JSON format
+ABILITY_NAME_MAP = {
+    'FirstStrike':       'First Strike',
+    'NegateFirstStrike': 'Negate First Strike',
+    'ArmorPiercing':     'Armor Piercing',
+    'MissileImmunity':   'Missile Immunity',
+    'MagicImmunity':     'Magic Immunity',
+    'IllusionImmunity':  'Illusion Immunity',
+    'DeathImmunity':     'Death Immunity',
+    'PoisonImmunity':    'Poison Immunity',
+    'FireImmunity':      'Fire Immunity',
+    'ColdImmunity':      'Cold Immunity',
+    'WeaponImmunity':    'Weapon Immunity',
+    'Flying':            'Flight',
+    'Windwalking':       'Wind Walking',
+    'Waterwalking':      'Water Walking',
+    'LongRange':         'Long Range',
+    'WallCrusher':       'Wall Crusher',
+    'HolyBonus':         'Holy Bonus',
+    'QuickCasting':      'Quick Casting',
+    'Noncorporeal':      'Non-Corporeal',
+    'BloodSucker':       'Blood Sucker',
+    'HealingAura':       'Healing Aura',
+    'LargeShield':       'Large Shield',
+    'CreateOutpost':     'Create Outpost',
+    'Fear':              'Cause Fear',
+    'PlaneShifting':     'Plane Shifting',
+    'StoningGaze':       'Stoning Gaze',
+    'StoningTouch':      'Stoning Touch',
+    'StoningImmunity':   'Stoning Immunity',
+    'CounterImmunity':   'Counter Immunity',
+    'LightningResist':   'Lightning Resist',
+    'Poison':            'Poison Touch',       # Poison=X → Poison Touch=X
+    'LifeSteal':         'Life Steal',
+    'ResistanceToAll':   'Resistance to All',
+    'DeathGaze':         'Death Gaze',
+    'DoomGaze':          'Doom Gaze',
+    'GazeRanged':        'Gaze Ranged',
 }
 
 # Spell ID -> display name for Spellability field
@@ -151,20 +189,20 @@ def ini_unit_to_record(u):
     """Convert a raw INI unit dict to the shared JSON schema record."""
     idx = u['index']
 
-    # Shared stat fields (snake_case, matching MoM schema)
+    # Shared stat fields (matching MoM/CoM1 JSON schema)
+    race_int = int(u.get('Race', 0))
     record = {
-        'id':         idx,
-        'name':       get_display_name(u),
-        'race':       int(u.get('Race', 0)),
-        'figures':    int(u.get('Figures', 1)),
-        'hp':         int(u.get('HP', 1)),
-        'melee':      int(u.get('Attack', 0)),
-        'defense':    int(u.get('Defense', 0)),
-        'resist':     int(u.get('Resistance', 0)),
-        'to_hit':     int(u.get('Hit', 30)) - 30,  # bonus relative to base 30%
+        'id':      idx,
+        'name':    get_display_name(u),
+        'race':    RACE_NAMES.get(race_int, str(race_int)),
+        'figures': int(u.get('Figures', 1)),
+        'hp':      int(u.get('HP', 1)),
+        'melee':   int(u.get('Attack', 0)),
+        'defense': int(u.get('Defense', 0)),
+        'resist':  int(u.get('Resistance', 0)),
     }
 
-    # Units with non-standard base block chance
+    # Non-standard base block chance (e.g. Zombie = 20%)
     to_defend = int(u.get('ToDefend', 30))
     if to_defend != 30:
         record['to_block'] = to_defend
@@ -173,19 +211,19 @@ def ini_unit_to_record(u):
     if u.get('Ranged') and int(u['Ranged']) > 0:
         rt = int(u.get('RangedType', 20))
         record['ranged']      = int(u['Ranged'])
-        record['ranged_type'] = RANGED_TYPE_MAP.get(rt, 'missile')
+        record['ranged_type'] = RANGED_TYPE_MAP.get(rt, 'Missile')
         record['ammo']        = int(u.get('Ammo', 0))
 
-    # Breath / thrown attack (named "breath" to match MoM)
+    # Breath / thrown attack
     if u.get('Thrown') and int(u['Thrown']) > 0:
-        record['breath']      = int(u['Thrown'])
-        record['breath_type'] = 'thrown'
+        record['thrown_breath']      = int(u['Thrown'])
+        record['thrown_breath_type'] = 'thrown'
     elif u.get('FireBreath') and int(u['FireBreath']) > 0:
-        record['breath']      = int(u['FireBreath'])
-        record['breath_type'] = 'fire'
+        record['thrown_breath']      = int(u['FireBreath'])
+        record['thrown_breath_type'] = 'fire'
     elif u.get('LightningBreath') and int(u['LightningBreath']) > 0:
-        record['breath']      = int(u['LightningBreath'])
-        record['breath_type'] = 'lightning'
+        record['thrown_breath']      = int(u['LightningBreath'])
+        record['thrown_breath_type'] = 'lightning'
 
     # Abilities list (CoM2-only; MoM uses flat fields instead)
     abilities = []
@@ -240,22 +278,32 @@ def ini_unit_to_record(u):
         abilities.remove('Mountainwalk')
         abilities.append('Pathfinding')
 
+    # Normalize ability names to match MoM/CoM1 format
+    def _rename(ab):
+        if '=' in ab:
+            key, val = ab.split('=', 1)
+            return f'{ABILITY_NAME_MAP.get(key, key)}={val}'
+        return ABILITY_NAME_MAP.get(ab, ab)
+    abilities = [_rename(ab) for ab in abilities]
+
+    # Heroes get a 'Hero' ability to match MoM/CoM1
+    if u.get('HeroType'):
+        abilities.insert(0, 'Hero')
+
     if abilities:
         record['abilities'] = abilities
 
-    # CoM2-only metadata
-    record['ini_name']  = u.get('Name', 'Unknown')
-    record['category']  = get_category(u)
-    record['hero_type'] = int(u['HeroType']) if u.get('HeroType') else 0
-    record['moves']     = int(u.get('Moves', 0))
-    record['cost']      = int(u.get('Cost', 0))
-    record['upkeep']    = int(u.get('Upkeep', 0))
+    # Metadata
+    record['category'] = get_category(u)
+    record['moves']    = int(u.get('Moves', 0)) // 2
+    record['cost']     = int(u.get('Cost', 0))
+    record['upkeep']   = int(u.get('Upkeep', 0))
 
     return record
 
 
 def main():
-    ini_path = 'CoM2 material/UNITS.INI'
+    ini_path = 'CoM2 unit data/UNITS.INI'
     out_path = 'CoM2 units.json'
 
     SPECIAL_UNIT_NAMES = {'Floating Island'}
@@ -267,7 +315,7 @@ def main():
 
     # Hardcoded ability fixes for data missing from the INI
     for r in records:
-        if r.get('ini_name') == 'Night Stalker' and r['category'] == 'Death Creatures':
+        if r.get('name') == 'Night Stalker' and r['category'] == 'Death Creatures':
             r.setdefault('abilities', []).append('GazeRanged=1')
 
     # Force race prefix for non-hero units that share a name with another race's unit
@@ -277,7 +325,7 @@ def main():
         if r['category'] == 'Heroes':
             continue
         if name_counts[r['name']] > 1:
-            race = RACE_NAMES.get(r['race'])
+            race = r['race']
             if race and race != 'Special' and not r['name'].startswith(race):
                 r['name'] = race + ' ' + r['name']
 

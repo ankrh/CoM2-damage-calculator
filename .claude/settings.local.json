@@ -51,7 +51,14 @@
       "Bash(python -c ':*)",
       "Bash(python generate_com2_unit_roster.py)",
       "Bash(python generate_mom_com2_unit_comparison.py)",
-      "Bash(node -e ':*)"
+      "Bash(node -e ':*)",
+      "Bash(python3 parse_roster.py)",
+      "Bash(python3 -c \"import json; f = open\\('MoM_units_parsed.json'\\); data = json.load\\(f\\); [print\\(f\\\\\"{k}: {v['name']} - abilities: {v.get\\('abilities', []\\)} - breath: {v.get\\('breath_type', 'N/A'\\)}\\\\\"\\) for k, v in list\\(data.items\\(\\)\\)[10:20]]\")",
+      "Bash(python3 -c \"import json; f = open\\('MoM_units_parsed.json'\\); data = json.load\\(f\\); entries = [v for k, v in data.items\\(\\) if 'missile_imm' in v or 'magic_imm' in v]; [print\\(f\\\\\"{v['name']}: {[k for k in ['missile_imm', 'magic_imm', 'death_imm', 'poison_imm'] if k in v]}\\\\\"\\) for v in entries[:10]]\")",
+      "Bash(python3 -c \"import json; f = open\\('MoM_units_parsed.json'\\); data = json.load\\(f\\); entries = [v for k, v in data.items\\(\\) if 'abilities' in v and len\\(v['abilities']\\) > 1]; [print\\(f\\\\\"{v['name']}: {v['abilities']}\\\\\"\\) for v in entries[:10]]\")",
+      "Bash(python3)",
+      "Bash(python3 parse_tweaker_unit_data.py)",
+      "Bash(python parse_tweaker_unit_data.py)"
     ]
   }
 }

@@ -259,11 +259,12 @@
   .enchant-row {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 0.5rem;
     font-size: 0.9rem;
     margin-top: 0.3rem;
   }
-  .enchant-row select {
+  .enchant-row select, .enchant-row-select {
     padding: 0.35rem 0.5rem;
     border: 1px solid var(--border);
     border-radius: 4px;
@@ -423,6 +424,19 @@
   .abil-num-row label {
     flex: 1;
     white-space: nowrap;
+  }
+  .abil-num-row select {
+    flex: none;
+    padding: 0.2rem 0.3rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 0.8rem;
+    text-align: left;
+  }
+  .abil-num-row:has(select) label {
+    flex: none;
   }
   .abil-num-row input[type="number"] {
     width: 50px;
@@ -606,22 +620,19 @@
 </div>
 
 <details class="combat-enchantments">
-  <summary>Combat Enchantments</summary>
+  <summary>Both Sides Enchantments</summary>
   <div class="enchantments-content">
-    <div class="abil-grid">
-      <label class="abil-check"><input type="checkbox" id="enchPrayer"> Prayer</label>
-      <label class="abil-check"><input type="checkbox" id="enchHighPrayer"> High Prayer</label>
-      <label class="abil-check"><input type="checkbox" id="enchDarkness"> Darkness</label>
-      <label class="abil-check"><input type="checkbox" id="enchHeavenlyLight"> Heavenly Light</label>
-    </div>
     <div class="enchant-row">
-      <label>Node aura:</label>
-      <select id="nodeAura">
-        <option value="none" selected>None</option>
-        <option value="chaos">Chaos</option>
-        <option value="nature">Nature</option>
-        <option value="sorcery">Sorcery</option>
-      </select>
+      <label class="abil-check"><input type="checkbox" id="enchDarkness"> Darkness/C. of Shadow/E. Night</label>
+      <label class="abil-check"><input type="checkbox" id="enchHeavenlyLight"> True Light/H. Light</label>
+      <label class="abil-check">Node aura:
+        <select id="nodeAura" class="enchant-row-select">
+          <option value="none" selected>None</option>
+          <option value="chaos">Chaos</option>
+          <option value="nature">Nature</option>
+          <option value="sorcery">Sorcery</option>
+        </select>
+      </label>
     </div>
   </div>
 </details>
@@ -680,51 +691,62 @@ const RANGED_TYPE_MAP = {
 // 'match' is used to find the ability in the unit's abilities array.
 // For bool: matches exact name or name=value. For num: matches name=value and extracts value.
 const ABILITY_DEFS = [
-  // Abilities (innate unit abilities)
+  // Abilities (innate unit abilities) — numeric first
+  { key: 'poison', label: 'Poison Touch', type: 'num', match: 'Poison', group: 'Abilities' },
+  { key: 'lifeSteal', label: 'Life Steal', type: 'num', match: 'LifeSteal', group: 'Abilities' },
+  { key: 'stoningTouch', label: 'Stoning Touch', type: 'num', match: 'StoningTouch', group: 'Abilities' },
+  { key: 'deathGaze', label: 'Death Gaze', type: 'num', match: 'DeathGaze', group: 'Abilities' },
+  { key: 'stoningGaze', label: 'Stoning Gaze', type: 'num', match: 'StoningGaze', group: 'Abilities' },
+  { key: 'doomGaze', label: 'Doom Gaze', type: 'num', match: 'DoomGaze', group: 'Abilities' },
+  { key: 'gazeRanged', label: 'Hidden Gaze Attack', type: 'num', match: 'GazeRanged', group: 'Abilities' },
+  { key: 'resistanceToAll', label: 'Resistance to All', type: 'num', match: 'ResistanceToAll', group: 'Abilities' },
+  { key: 'holyBonus', label: 'Holy Bonus', type: 'num', match: 'HolyBonus', group: 'Abilities' },
+  { key: 'unitType', label: 'Unit Type', type: 'select', options: [['normal','Normal'],['hero','Hero'],['fantastic','Fantastic']], group: 'Abilities' },
   { key: 'armorPiercing', label: 'Armor Piercing', type: 'bool', match: 'ArmorPiercing', group: 'Abilities' },
   { key: 'firstStrike', label: 'First Strike', type: 'bool', match: 'FirstStrike', group: 'Abilities' },
   { key: 'negateFirstStrike', label: 'Negate First Strike', type: 'bool', match: 'NegateFirstStrike', group: 'Abilities' },
   { key: 'largeShield', label: 'Large Shield', type: 'bool', match: 'LargeShield', group: 'Abilities' },
   { key: 'lucky', label: 'Lucky', type: 'bool', match: 'Lucky', group: 'Abilities' },
-  { key: 'noncorporeal', label: 'Noncorporeal', type: 'bool', match: 'Noncorporeal', group: 'Abilities' },
   { key: 'illusion', label: 'Illusion', type: 'bool', match: 'Illusion', group: 'Abilities' },
-  { key: 'invisibility', label: 'Invisible', type: 'bool', match: 'Invisibility', group: 'Abilities' },
   { key: 'longRange', label: 'Long Range', type: 'bool', match: 'LongRange', group: 'Abilities' },
-  { key: 'fear', label: 'Cause Fear', type: 'bool', match: 'Fear', group: 'Abilities' },
   { key: 'doom', label: 'Doom Damage', type: 'bool', match: 'Doom', group: 'Abilities' },
-  { key: 'immolation', label: 'Immolation', type: 'bool', match: 'Immolation', group: 'Abilities' },
-  { key: 'missileImmunity', label: 'Missile Immunity', type: 'bool', match: 'MissileImmunity', group: 'Abilities' },
-  { key: 'magicImmunity', label: 'Magic Immunity', type: 'bool', match: 'MagicImmunity', group: 'Abilities' },
-  { key: 'weaponImmunity', label: 'Weapon Immunity', type: 'bool', match: 'WeaponImmunity', group: 'Abilities' },
   { key: 'fireImmunity', label: 'Fire Immunity', type: 'bool', match: 'FireImmunity', group: 'Abilities' },
   { key: 'coldImmunity', label: 'Cold Immunity', type: 'bool', match: 'ColdImmunity', group: 'Abilities' },
   { key: 'deathImmunity', label: 'Death Immunity', type: 'bool', match: 'DeathImmunity', group: 'Abilities' },
   { key: 'poisonImmunity', label: 'Poison Immunity', type: 'bool', match: 'PoisonImmunity', group: 'Abilities' },
   { key: 'stoningImmunity', label: 'Stoning Immunity', type: 'bool', match: 'StoningImmunity', group: 'Abilities' },
-  { key: 'illusionImmunity', label: 'Illusion Immunity', type: 'bool', match: 'IllusionImmunity', group: 'Abilities' },
-  { key: 'counterImmunity', label: 'Counter Immunity', type: 'bool', match: 'CounterImmunity', group: 'Abilities' },
   { key: 'lightningResist', label: 'Lightning Resist', type: 'bool', match: 'LightningResist', group: 'Abilities' },
   // Abilities/Enchantments (innate or granted by spells)
-  { key: 'bless', label: 'Bless', type: 'bool', match: 'Bless', group: 'Abilities/Enchantments' },
-  { key: 'holyWeapon', label: 'Holy Weapon/Holy Arms', type: 'bool', match: 'HolyWeapon', group: 'Abilities/Enchantments' },
-  { key: 'holyArmor', label: 'Holy Armor', type: 'bool', match: 'HolyArmor', group: 'Abilities/Enchantments' },
-  { key: 'trueSight', label: 'True Sight', type: 'bool', match: 'TrueSight', group: 'Abilities/Enchantments' },
-  { key: 'invulnerability', label: 'Invulnerability', type: 'bool', match: 'Invulnerability', group: 'Abilities/Enchantments' },
-  { key: 'righteousness', label: 'Righteousness', type: 'bool', match: 'Righteousness', group: 'Abilities/Enchantments' },
+  { key: 'fear', label: 'Cause Fear', type: 'bool', match: 'Fear', group: 'Abilities/Enchantments' },
+  { key: 'invisibility', label: 'Invisible', type: 'bool', match: 'Invisibility', group: 'Abilities/Enchantments' },
+  { key: 'immolation', label: 'Immolation', type: 'bool', match: 'Immolation', group: 'Abilities/Enchantments' },
+  { key: 'magicImmunity', label: 'Magic Immunity', type: 'bool', match: 'MagicImmunity', group: 'Abilities/Enchantments' },
+  { key: 'missileImmunity', label: 'Missile Imm./G. Wind', type: 'bool', match: 'MissileImmunity', group: 'Abilities/Enchantments' },
+  { key: 'weaponImmunity', label: 'Weapon Imm./Wr. Form', type: 'bool', match: 'WeaponImmunity', group: 'Abilities/Enchantments' },
+  { key: 'illusionImmunity', label: 'Illusion Imm./Tr. Sight', type: 'bool', match: 'IllusionImmunity', group: 'Abilities/Enchantments' },
   // Enchantments (spell-granted only)
+  { key: 'prayer', label: 'Prayer', type: 'select', options: [['none','None'],['prayer','Prayer'],['highPrayer','High Prayer']], group: 'Enchantments' },
+  { key: 'flameBlade', label: 'Metal Fires/Flame Blade', type: 'select', options: [['none','None'],['metalFires','Metal Fires'],['flameBlade','Flame Blade']], group: 'Enchantments' },
+  { key: 'chaosChannels', label: 'Chaos Channels', type: 'select', options: [['none','None'],['defense','+Defense'],['fireBreath','+Fire Breath']], group: 'Enchantments' },
+  { key: 'stoneSkin', label: 'Stone/Iron Skin', type: 'select', options: [['none','None'],['stoneSkin','Stone Skin'],['ironSkin','Iron Skin']], group: 'Enchantments' },
+  { key: 'bless', label: 'Bless', type: 'bool', match: 'Bless', group: 'Enchantments' },
+  { key: 'blur', label: 'Blur', type: 'bool', match: 'Blur', group: 'Enchantments' },
+  { key: 'warpReality', label: 'Warp Reality', type: 'bool', match: 'WarpReality', group: 'Enchantments' },
+  { key: 'blackPrayer', label: 'Debuffed by Black Prayer', type: 'bool', match: 'BlackPrayer', group: 'Enchantments' },
+  { key: 'holyWeapon', label: 'Holy Weapon/H. Arms', type: 'bool', match: 'HolyWeapon', group: 'Enchantments' },
+  { key: 'holyArmor', label: 'Holy Armor', type: 'bool', match: 'HolyArmor', group: 'Enchantments' },
+  { key: 'invulnerability', label: 'Invulnerability', type: 'bool', match: 'Invulnerability', group: 'Enchantments' },
+  { key: 'righteousness', label: 'Righteousness', type: 'bool', match: 'Righteousness', group: 'Enchantments' },
   { key: 'charmOfLife', label: 'Charm of Life', type: 'bool', match: 'CharmOfLife', group: 'Enchantments' },
-  { key: 'wraithForm', label: 'Wraith Form', type: 'bool', match: 'WraithForm', group: 'Enchantments' },
   { key: 'eldritchWeapon', label: 'Eldritch Weapon', type: 'bool', match: 'EldritchWeapon', group: 'Enchantments' },
-  // Numeric abilities (no group header needed)
-  { key: 'poison', label: 'Poison Touch', type: 'num', match: 'Poison' },
-  { key: 'lifeSteal', label: 'Life Steal', type: 'num', match: 'LifeSteal' },
-  { key: 'stoningTouch', label: 'Stoning Touch', type: 'num', match: 'StoningTouch' },
-  { key: 'deathGaze', label: 'Death Gaze', type: 'num', match: 'DeathGaze' },
-  { key: 'stoningGaze', label: 'Stoning Gaze', type: 'num', match: 'StoningGaze' },
-  { key: 'doomGaze', label: 'Doom Gaze', type: 'num', match: 'DoomGaze' },
-  { key: 'gazeRanged', label: 'Hidden Gaze Attack', type: 'num', match: 'GazeRanged' },
-  { key: 'resistanceToAll', label: 'Resistance to All', type: 'num', match: 'ResistanceToAll' },
-  { key: 'holyBonus', label: 'Holy Bonus', type: 'num', match: 'HolyBonus' },
+  { key: 'berserk', label: 'Berserk', type: 'bool', match: 'Berserk', group: 'Enchantments' },
+  { key: 'haste', label: 'Haste', type: 'bool', match: 'Haste', group: 'Enchantments' },
+  { key: 'blackChannels', label: 'Black Channels', type: 'bool', match: 'BlackChannels', group: 'Enchantments' },
+  { key: 'giantStrength', label: 'Giant Strength', type: 'bool', match: 'GiantStrength', group: 'Enchantments' },
+  { key: 'lionheart', label: 'Lionheart', type: 'bool', match: 'Lionheart', group: 'Enchantments' },
+  { key: 'elementalArmor', label: 'Elemental Armor', type: 'bool', match: 'ElementalArmor', group: 'Enchantments' },
+  { key: 'resistElements', label: 'Resist Elements', type: 'bool', match: 'ResistElements', group: 'Enchantments' },
+  { key: 'resistMagic', label: 'Resist Magic', type: 'bool', match: 'ResistMagic', group: 'Enchantments' },
 ];
 
 function buildAbilitiesUI(prefix) {
@@ -751,6 +773,13 @@ function buildAbilitiesUI(prefix) {
       lbl.className = 'abil-check';
       lbl.innerHTML = `<input type="checkbox" id="${id}"> ${abil.label}`;
       gridDiv.appendChild(lbl);
+    } else if (abil.type === 'select') {
+      gridDiv = null;
+      const row = document.createElement('div');
+      row.className = 'abil-num-row';
+      const opts = abil.options.map(([v, l]) => `<option value="${v}">${l}</option>`).join('');
+      row.innerHTML = `<label for="${id}">${abil.label}</label><select id="${id}">${opts}</select>`;
+      container.appendChild(row);
     } else {
       gridDiv = null;
       const row = document.createElement('div');
@@ -790,6 +819,8 @@ function applyAbilities(prefix, abilValues) {
     if (!el) continue;
     if (abil.type === 'bool') {
       el.checked = !!abilValues[abil.key];
+    } else if (abil.type === 'select') {
+      el.value = abilValues[abil.key] || abil.options[0][0];
     } else {
       el.value = abilValues[abil.key] || 0;
     }
@@ -802,6 +833,8 @@ function clearAbilities(prefix) {
     if (!el) continue;
     if (abil.type === 'bool') {
       el.checked = false;
+    } else if (abil.type === 'select') {
+      el.value = abil.options[0][0];
     } else {
       el.value = 0;
     }
@@ -905,6 +938,7 @@ const COM2_UNITS_DATA = {"0": {"id": 0, "name": "Dwarf", "race": 4, "figures": 1
 const VERSION_DATA = {
   'mom_1.03.01':    MOM_UNITS_DATA,
   'mom_cp_1.60.00': MOM_UNITS_DATA,
+  'com_6.08':       COM2_UNITS_DATA,
   'com2_1.05.11':   COM2_UNITS_DATA,
 };
 
@@ -1071,11 +1105,69 @@ function updateUnitLock(prefix) {
   }
 }
 
+// Cross-version unit name aliases (CoM2 name → MoM name and vice versa)
+const UNIT_NAME_ALIASES = {
+  'Shamans': 'Shaman',       'Shaman': 'Shamans',
+  'Chimeras': 'Chimera',     'Chimera': 'Chimeras',
+  'Phantom Warriors': 'Phantom Warrior', 'Phantom Warrior': 'Phantom Warriors',
+  'Pegasai': 'Pegasi',       'Pegasi': 'Pegasai',
+  'Archangel': 'Arch Angel', 'Arch Angel': 'Archangel',
+  'Orc Warrior': 'Orc Archer', 'Orc Archer': 'Orc Warrior',
+};
+
+function getUnitHeroArchetype(name) {
+  // "Dwarf (Brax)" → "Dwarf"
+  const m = (name || '').match(/^(.+?)\s*\(.*\)$/);
+  return m ? m[1].trim() : null;
+}
+
+function findMatchingUnit(units, oldUnit) {
+  if (!oldUnit) return null;
+  const oldName = oldUnit.name;
+  // 1. Exact name match
+  let match = units.find(u => u.name === oldName);
+  if (match) return match;
+  // 2. Try alias
+  const aliased = UNIT_NAME_ALIASES[oldName];
+  if (aliased) {
+    match = units.find(u => u.name === aliased);
+    if (match) return match;
+  }
+  // 3. Hero archetype match (e.g. "Dwarf (Brax)" matches "Dwarf (Brax)" across versions)
+  const arch = getUnitHeroArchetype(oldName);
+  if (arch) {
+    match = units.find(u => getUnitHeroArchetype(u.name) === arch);
+    if (match) return match;
+  }
+  return null;
+}
+
 function onVersionChange() {
   const version = document.getElementById('gameVersion').value;
+  const aUnitSel = document.getElementById('aUnit');
+  const bUnitSel = document.getElementById('bUnit');
+  // Remember currently selected units before repopulating
+  const oldAId = aUnitSel.value;
+  const oldBId = bUnitSel.value;
+  const oldAUnit = oldAId !== 'custom' ? (Object.values(unitDatabases).flat().find(u => String(u.id) === oldAId) || null) : null;
+  const oldBUnit = oldBId !== 'custom' ? (Object.values(unitDatabases).flat().find(u => String(u.id) === oldBId) || null) : null;
+
   const units = loadUnitDatabase(version);
   populateUnitDropdown('aUnit', units);
   populateUnitDropdown('bUnit', units);
+
+  // Only do cross-version name matching if populateUnitDropdown didn't already
+  // restore the selection by ID (i.e. the unit ID doesn't exist in the new roster)
+  for (const [prefix, oldUnit, sel] of [['a', oldAUnit, aUnitSel], ['b', oldBUnit, bUnitSel]]) {
+    if (!oldUnit) continue;
+    // If the dropdown already restored to the same ID, no need to re-match
+    if (sel.value !== 'custom') continue;
+    const matched = findMatchingUnit(units, oldUnit);
+    if (matched) {
+      sel.value = String(matched.id);
+    }
+  }
+
   updateUnitLock('a');
   updateUnitLock('b');
   updateTypeVisibility();
