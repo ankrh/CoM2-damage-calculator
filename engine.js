@@ -85,3 +85,19 @@ function calcTotalDamageDist(atkFigs, atkStr, toHit, defStr, toBlock, hp, cap) {
   }
   return result;
 }
+
+// Compute resistance-based damage distribution (for Poison Touch, etc.).
+// Each roll is an independent Bernoulli trial: fail → 1 damage.
+// numRolls: total resistance rolls (attacking figures × strength per figure)
+// pFail: probability of failing each roll (0 to 1)
+// cap: maximum possible damage (target's remaining HP)
+function calcResistDmgDist(numRolls, pFail, cap) {
+  if (numRolls <= 0 || pFail <= 0) return [1];
+  const pmf = binomialPMF(numRolls, Math.min(pFail, 1));
+  const maxD = Math.min(numRolls, cap);
+  const dist = new Array(maxD + 1).fill(0);
+  for (let d = 0; d <= numRolls; d++) {
+    dist[Math.min(d, maxD)] += pmf[d];
+  }
+  return dist;
+}

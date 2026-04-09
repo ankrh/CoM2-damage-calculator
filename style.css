@@ -501,8 +501,8 @@ h1 {
 }
 
 /* Realm colors for enchantments */
-.realm-life { color: grey; }
-.realm-death { color: violet; }
-.realm-nature { color: green; }
-.realm-sorcery { color: dodgerblue; }
-.realm-chaos { color: orange; }
+.realm-life { font-weight: bold; }
+.realm-death { color: violet;  font-weight: bold; }
+.realm-nature { color: green;  font-weight: bold; }
+.realm-sorcery { color: dodgerblue;  font-weight: bold; }
+.realm-chaos { color: orange;  font-weight: bold; }

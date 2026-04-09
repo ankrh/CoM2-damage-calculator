@@ -225,6 +225,14 @@
         <option value="darkness">Darkness</option>
       </select>
     </label>
+    <span class="field-group">
+      <label>City walls:</label>
+      <select id="cityWalls">
+        <option value="none" selected>None</option>
+        <option value="1">+1 def</option>
+        <option value="3">+3 def</option>
+      </select>
+    </span>
     <label class="abil-check">Node aura:
       <select id="nodeAura" class="enchant-row-select">
         <option value="none" selected>None</option>
@@ -233,22 +241,12 @@
         <option value="sorcery">Sorcery</option>
       </select>
     </label>
-  </div>
-  <div class="enchant-row">
     <label id="rangedCheckLabel" class="check-label">
       <input type="checkbox" id="rangedCheck" checked> Ranged attack
     </label>
     <span class="field-group" id="rangedDistLabel">
       <label>Ranged attack distance:</label>
       <input type="number" id="rangedDist" min="1" max="99" value="1">
-    </span>
-    <span class="field-group">
-      <label>City walls:</label>
-      <select id="cityWalls">
-        <option value="none" selected>None</option>
-        <option value="1">+1 def</option>
-        <option value="3">+3 def</option>
-      </select>
     </span>
   </div>
 </div>

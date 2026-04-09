@@ -29,4 +29,4 @@ VERIFIED UNITS.DAT ACCURATE IN-GAME CoM2
 
 - Test darkness effect on gaze attacks
 
-- Avoid negative stats after modifiers
+- Test poison + gaze

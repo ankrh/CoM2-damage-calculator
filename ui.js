@@ -257,10 +257,10 @@ function readUnitStats(prefix) {
   }
 
   // Effective values (level + weapon + ability + node aura + darkness/light modifiers)
-  const atk = baseAtk > 0 ? baseAtk + lvl.atk + wpn.atk + abilMods.atkMod + nodeBonus + darkLightBonus : 0;
-  const def = baseDef + lvl.def + wpn.def + cityWallBonus + abilMods.defMod + nodeBonus + darkLightBonus;
-  const res = baseRes + lvl.res + abilMods.resMod + nodeBonus + darkLightBonus;
-  const hp  = baseHP + lvl.hp + abilMods.hpMod;
+  const atk = baseAtk > 0 ? Math.max(0, baseAtk + lvl.atk + wpn.atk + abilMods.atkMod + nodeBonus + darkLightBonus) : 0;
+  const def = Math.max(0, baseDef + lvl.def + wpn.def + cityWallBonus + abilMods.defMod + nodeBonus + darkLightBonus);
+  const res = Math.max(0, baseRes + lvl.res + abilMods.resMod + nodeBonus + darkLightBonus);
+  const hp  = Math.max(1, baseHP + lvl.hp + abilMods.hpMod);
 
   // Ranged/Thrown/Breath strength
   let rtbLvl = 0, rtbWpn = 0;
@@ -271,7 +271,7 @@ function readUnitStats(prefix) {
     rtbLvl = lvl.thrown;
     rtbWpn = (baseRtb > 0 && thrownGetsWpn) ? wpn.atk : 0;
   }
-  const rtb = baseRtb > 0 ? baseRtb + rtbLvl + rtbWpn + abilMods.rtbMod + nodeBonus + darkLightBonus : 0;
+  const rtb = baseRtb > 0 ? Math.max(0, baseRtb + rtbLvl + rtbWpn + abilMods.rtbMod + nodeBonus + darkLightBonus) : 0;
 
   // To Hit percentage bonuses
   const meleeToHitBonus = lvl.toHit + wpn.toHit + abilMods.toHitMod;
@@ -327,11 +327,11 @@ function readUnitStats(prefix) {
 function updateModifiedDisplay(prefix, stats) {
   const s = stats || readUnitStats(prefix);
 
-  function showMod(id, base, bonus) {
+  function showMod(id, effective, base) {
     const el = document.getElementById(id);
     if (!el) return;
-    if (bonus !== 0) {
-      el.textContent = String(base + bonus);
+    if (effective !== base) {
+      el.textContent = String(effective);
       el.classList.add('visible');
     } else {
       el.textContent = '';
@@ -339,12 +339,11 @@ function updateModifiedDisplay(prefix, stats) {
     }
   }
 
-  function showModPct(id, baseMod, bonus) {
+  function showModPct(id, effective, base) {
     const el = document.getElementById(id);
     if (!el) return;
-    if (bonus !== 0 || baseMod !== 0) {
-      const finalPct = Math.min(100, Math.max(10, 30 + baseMod + bonus));
-      el.textContent = finalPct + '%';
+    if (effective !== base) {
+      el.textContent = Math.round(effective * 100) + '%';
       el.classList.add('visible');
     } else {
       el.textContent = '';
@@ -352,15 +351,18 @@ function updateModifiedDisplay(prefix, stats) {
     }
   }
 
-  showMod(prefix + 'AtkMod', s.baseAtk, s.atkBonus);
-  showMod(prefix + 'RtbMod', s.baseRtb, s.rtbBonus);
-  showMod(prefix + 'DefMod', s.baseDef, s.defBonus);
-  showMod(prefix + 'ResMod', s.baseRes, s.resBonus);
-  showMod(prefix + 'HPMod', s.baseHP, s.hpBonus);
+  showMod(prefix + 'AtkMod', s.atk, s.baseAtk);
+  showMod(prefix + 'RtbMod', s.rtb, s.baseRtb);
+  showMod(prefix + 'DefMod', s.def, s.baseDef);
+  showMod(prefix + 'ResMod', s.res, s.baseRes);
+  showMod(prefix + 'HPMod', s.hp, s.baseHP);
 
-  showModPct(prefix + 'ToHitMeleeMod', s.baseToHitMod, s.meleeToHitBonus);
-  showModPct(prefix + 'ToHitRtbModDisp', s.baseToHitRtbMod, s.rtbToHitLvlBonus + s.rtbToHitWpnBonus + s.rtbDistPenalty);
-  showModPct(prefix + 'ToBlkModDisp', s.baseToBlkMod, 0);
+  const baseMeleeToHit = clampPct(30, s.baseToHitMod);
+  const baseRtbToHit = clampPct(30, s.baseToHitRtbMod);
+  const baseToBlock = clampPct(30, s.baseToBlkMod);
+  showModPct(prefix + 'ToHitMeleeMod', s.toHitMelee, baseMeleeToHit);
+  showModPct(prefix + 'ToHitRtbModDisp', s.toHitRtb, baseRtbToHit);
+  showModPct(prefix + 'ToBlkModDisp', s.toBlock, baseToBlock);
 }
 
 // --- Level Bonuses ---
@@ -687,8 +689,9 @@ function recalculate() {
   updateModifiedDisplay('b', b);
 
   const isRanged = document.getElementById('rangedCheck').checked && a.rangedType !== 'none' && a.rtb > 0;
+  const version = document.getElementById('gameVersion').value;
 
-  const result = resolveCombat(a, b, { isRanged });
+  const result = resolveCombat(a, b, { isRanged, version });
 
   const aFirstFigRem = a.hp > 0 && a.dmg % a.hp !== 0 ? a.hp - (a.dmg % a.hp) : a.hp;
   const bFirstFigRem = b.hp > 0 && b.dmg % b.hp !== 0 ? b.hp - (b.dmg % b.hp) : b.hp;
