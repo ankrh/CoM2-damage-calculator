@@ -504,7 +504,8 @@ const PRESETS = {
 
   // --- Weapon Immunity (MoM 1.31) ---
   weaponImmunityMelee: {
-    desc: 'Weapon Immunity: normal melee vs WI (def 0→10), 100% block → all 10 hits blocked',
+    desc: 'Weapon Immunity Melee (MoM 1.31): normal melee vs WI (def 0→10), 100% block → all 10 hits blocked',
+    version: 'mom_1.31',
     a: { atk:10, toHitMod:70, hp:10 },
     b: { def:0, toBlkMod:70, hp:10, abilities: { weaponImmunity: true } },
     expected: { dmgToA: 0, dmgToB: 0 },
@@ -534,7 +535,8 @@ const PRESETS = {
     expected: { dmgToA: 0, dmgToB: 1 },
   },
   weaponImmunityThrown131: {
-    desc: 'Weapon Immunity v1.31 bug: thrown ignores WI → def stays 0, all 10 thrown hits land; melee 1 hit blocked by WI def 10',
+    desc: 'Weapon Immunity vs Thrown (MoM 1.31): bug — thrown ignores WI → def stays 0, all 10 thrown hits land; melee 1 hit blocked by WI def 10',
+    version: 'mom_1.31',
     a: { atk:1, toHitMod:70, rtbType:'thrown', rtb:10, toHitRtbMod:70, hp:10 },
     b: { atk:0, def:0, toBlkMod:70, hp:20, abilities: { weaponImmunity: true } },
     expected: { dmgToA: 0, dmgToB: 10 },
@@ -555,14 +557,14 @@ const PRESETS = {
   },
   // --- Weapon Immunity (version-specific) ---
   weaponImmunityThrownPatched: {
-    desc: 'Weapon Immunity patched: thrown triggers WI (def 0→10), 100% block → all thrown + melee blocked',
+    desc: 'Weapon Immunity vs Thrown (MoM CP 1.60): fix — thrown triggers WI (def 0→10), 100% block → all thrown + melee blocked',
     version: 'mom_cp_1.60.00',
     a: { atk:1, toHitMod:70, rtbType:'thrown', rtb:10, toHitRtbMod:70, hp:10 },
     b: { atk:0, def:0, toBlkMod:70, hp:10, abilities: { weaponImmunity: true } },
     expected: { dmgToA: 0, dmgToB: 0 },
   },
   weaponImmunityCom2Melee: {
-    desc: 'Weapon Immunity CoM2: normal melee vs WI → def 0+8=8, 100% block → only 8 hits blocked',
+    desc: 'Weapon Immunity Melee (CoM2): normal melee vs WI → def 0+8=8, 100% block → only 8 hits blocked',
     version: 'com2_1.05.11',
     a: { atk:10, toHitMod:70, hp:10 },
     b: { def:0, toBlkMod:70, hp:10, abilities: { weaponImmunity: true } },
@@ -606,14 +608,15 @@ const PRESETS = {
   },
 
   missileImmunityWIOverwrite131: {
-    desc: 'v1.31 bug: WI+MI vs normal missile → WI overwrites MI, def=10 not 50. 15 hits − 10 blocks = 5',
+    desc: 'WI+MI vs Missile (MoM 1.31): bug — WI overwrites MI, def=10 not 50. 15 hits − 10 blocks = 5',
+    version: 'mom_1.31',
     a: { rtbType:'missile', rtb:15, toHitRtbMod:70, hp:10 },
     b: { def:0, toBlkMod:70, hp:20, abilities: { weaponImmunity: true, missileImmunity: true } },
     rangedCheck: true, rangedDist: 1,
     expected: { dmgToA: 0, dmgToB: 5.000 },
   },
   missileImmunityWIOverwriteFixed: {
-    desc: 'v1.60 fix: WI+MI vs normal missile → MI wins, def=50. 15 hits all blocked',
+    desc: 'WI+MI vs Missile (MoM CP 1.60): fix — MI wins, def=50. 15 hits all blocked',
     version: 'mom_cp_1.60.00',
     a: { rtbType:'missile', rtb:15, toHitRtbMod:70, hp:10 },
     b: { def:0, toBlkMod:70, hp:20, abilities: { weaponImmunity: true, missileImmunity: true } },
@@ -642,10 +645,10 @@ const PRESETS = {
     expected: { dmgToA: 0, dmgToB: 3.000 },
   },
   fireImmunityNotThrown: {
-    desc: 'Fire Immunity does NOT apply to thrown: def stays 0, 3 thrown 100% hit → 3 dmg',
-    a: { atk:0, rtbType:'thrown', rtb:3, toHitRtbMod:70, hp:10 },
+    desc: 'Fire Immunity does NOT apply to thrown: def stays 0, 1+3 thrown+melee 100% hit → 4 dmg',
+    a: { atk:1, toHitMod:70, rtbType:'thrown', rtb:3, toHitRtbMod:70, hp:10 },
     b: { atk:0, def:0, toBlkMod:70, hp:10, abilities: { fireImmunity: true } },
-    expected: { dmgToA: 0, dmgToB: 3.000 },
+    expected: { dmgToA: 0, dmgToB: 4.000 },
   },
   fireImmunityNotMissile: {
     desc: 'Fire Immunity does NOT apply to missile ranged: def stays 0, 3 atk 100% hit → 3 dmg',
@@ -669,13 +672,15 @@ const PRESETS = {
 
   // --- Cause Fear (v1.31 buggy behavior) ---
   fearBasic: {
-    desc: 'Cause Fear v1.31: A fears B (50%) + self-fear bug. E[A unfeared]=3.5 → E[dmgB]=10.5, E[B unfeared]=0.5 → E[dmgA]=1.5',
+    desc: 'Cause Fear Attacker (MoM 1.31): bug — A fears B (50%) + self-fear bug. E[A unfeared]=3.5 → E[dmgB]=10.5, E[B unfeared]=0.5 → E[dmgA]=1.5',
+    version: 'mom_1.31',
     a: { figs:4, atk:3, toHitMod:70, hp:10, abilities: { fear: true } },
     b: { atk:3, toHitMod:70, hp:20, def:0, res:5 },
     expected: { dmgToA: 1.500, dmgToB: 10.500 },
   },
   fearDefenderNoop: {
-    desc: 'Cause Fear v1.31 bug: defending Fear has no effect. Both do 5 dmg normally',
+    desc: 'Cause Fear Defender (MoM 1.31): bug — defending Fear has no effect. Both do 5 dmg normally',
+    version: 'mom_1.31',
     a: { atk:5, toHitMod:70, hp:10, res:5 },
     b: { atk:5, toHitMod:70, hp:10, def:0, res:5, abilities: { fear: true } },
     expected: { dmgToA: 5.000, dmgToB: 5.000 },
@@ -746,6 +751,46 @@ const PRESETS = {
     expected: { dmgToA: 0, dmgToB: 5.000 },
   },
 
+  // --- Invisibility ---
+  invisibilityMelee: {
+    desc: 'Invisible defender melee: 5 atk 30% hit − 10% invis penalty = 20% hit vs def 0, E[dmg] = 5×0.2 = 1.0',
+    a: { atk:5, hp:10 },
+    b: { def:0, hp:10, abilities: { invisibility: true } },
+    expected: { dmgToA: 0, dmgToB: 1.000 },
+  },
+  invisibilityRangedBlocked: {
+    desc: 'Invisible defender cannot be targeted by ranged: 0 damage regardless of attacker stats',
+    a: { rtbType:'missile', rtb:5, hp:10 },
+    b: { def:0, hp:10, abilities: { invisibility: true } },
+    rangedCheck: true, rangedDist: 1,
+    expected: { dmgToA: 0, dmgToB: 0 },
+  },
+  invisibilityRangedIllusionImmune: {
+    desc: 'Illusion Immune attacker can target invisible defender at range with no penalty: E[dmg] = 5×0.3 = 1.5',
+    a: { rtbType:'missile', rtb:5, hp:10, abilities: { illusionImmunity: true } },
+    b: { def:0, hp:10, abilities: { invisibility: true } },
+    rangedCheck: true, rangedDist: 1,
+    expected: { dmgToA: 0, dmgToB: 1.500 },
+  },
+  invisibilityCounter: {
+    desc: 'Invisible attacker: B counter gets −10% to hit penalty. A: 1×0.3=0.3; B counter: 5×0.2=1.0',
+    a: { atk:1, def:0, hp:10, abilities: { invisibility: true } },
+    b: { atk:5, def:0, hp:10 },
+    expected: { dmgToA: 1.000, dmgToB: 0.300 },
+  },
+  invisibilityIllusionImmuneNoPenalty: {
+    desc: 'Illusion Immune attacker ignores invisibility: full 30% hit, E[dmg] = 5×0.3 = 1.5',
+    a: { atk:5, hp:10, abilities: { illusionImmunity: true } },
+    b: { def:0, hp:10, abilities: { invisibility: true } },
+    expected: { dmgToA: 0, dmgToB: 1.500 },
+  },
+  invisibilityDoomIgnores: {
+    desc: 'Doom bypasses to-hit so invisibility penalty is irrelevant: exact 5 damage',
+    a: { atk:5, hp:10, abilities: { doom: true } },
+    b: { def:5, toBlkMod:70, hp:10, abilities: { invisibility: true } },
+    expected: { dmgToA: 0, dmgToB: 5.000 },
+  },
+
   // --- Doom Damage ---
   doomDamageMelee: {
     desc: 'Doom Damage Melee: 1 fig 5 atk doom vs 5 def — bypasses to-hit and defense, exact 5 damage',
@@ -799,14 +844,15 @@ const PRESETS = {
     expected: { dmgToA: 0, dmgToB: 1.200 },
   },
   holyBonusRangedMoM: {
-    desc: 'Holy Bonus MoM: HB does NOT boost ranged atk in MoM. rtb 1 + HB 2 → still 1 hit',
+    desc: 'Holy Bonus Ranged (MoM 1.31): HB does NOT boost ranged atk. rtb 1 + HB 2 → still 1 hit',
+    version: 'mom_1.31',
     a: { rtbType:'missile', rtb:1, toHitRtbMod:70, hp:10, abilities: { holyBonus: 2 } },
     b: { hp:10 },
     rangedCheck: true, rangedDist: 1,
     expected: { dmgToA: 0, dmgToB: 1.000 },
   },
   holyBonusRangedCoM2: {
-    desc: 'Holy Bonus CoM2: HB boosts ranged atk. rtb 1 + HB 2 → 3 hits, 100% hit vs 0 def → 3 dmg',
+    desc: 'Holy Bonus Ranged (CoM2): HB boosts ranged atk. rtb 1 + HB 2 → 3 hits, 100% hit vs 0 def → 3 dmg',
     version: 'com2_1.05.11',
     a: { rtbType:'missile', rtb:1, toHitRtbMod:70, hp:10, abilities: { holyBonus: 2 } },
     b: { hp:10 },
@@ -834,6 +880,73 @@ const PRESETS = {
     expected: { dmgToA: 0, dmgToB: 1.600 },
   },
 
+  // --- Stone Skin / Iron Skin ---
+  stoneSkinDef: {
+    desc: 'Stone Skin: +1 Def. 1 atk 100% hit vs def 0 + Stone Skin → def 1, 30% block → E[dmg]=0.7',
+    a: { atk:1, toHitMod:70, hp:10 },
+    b: { hp:10, abilities: { stoneSkin: 'stoneSkin' } },
+    expected: { dmgToA: 0, dmgToB: 0.700 },
+  },
+  ironSkinDef: {
+    desc: 'Iron Skin: +5 Def. 5 atk 100% hit vs def 0 + Iron Skin → def 5, E[blocks]=1.5 → E[dmg]=3.5',
+    a: { atk:5, toHitMod:70, hp:10 },
+    b: { hp:10, abilities: { stoneSkin: 'ironSkin' } },
+    expected: { dmgToA: 0, dmgToB: 3.500 },
+  },
+
+  // --- Metal Fires / Flame Blade ---
+  metalFiresMelee: {
+    desc: 'Metal Fires +1 melee: base 1 atk + MF → 2 atk, 100% hit vs 0 def → E[dmg]=2.0',
+    a: { atk:1, toHitMod:70, hp:10, abilities: { flameBlade: 'metalFires' } },
+    b: { hp:10 },
+    expected: { dmgToA: 0, dmgToB: 2.000 },
+  },
+  metalFiresMissile: {
+    desc: 'Metal Fires +1 missile: base 1 + MF → 2 rtb, 100% hit vs 0 def → E[dmg]=2.0',
+    a: { rtbType:'missile', rtb:1, toHitRtbMod:70, hp:10, abilities: { flameBlade: 'metalFires' } },
+    b: { hp:10 },
+    rangedCheck: true, rangedDist: 1,
+    expected: { dmgToA: 0, dmgToB: 2.000 },
+  },
+  metalFiresNotBoulder: {
+    desc: 'Metal Fires does NOT boost boulder: base 1 boulder + MF → still 1 rtb → E[dmg]=1.0',
+    a: { rtbType:'boulder', rtb:1, toHitRtbMod:70, hp:10, abilities: { flameBlade: 'metalFires' } },
+    b: { hp:10 },
+    rangedCheck: true, rangedDist: 1,
+    expected: { dmgToA: 0, dmgToB: 1.000 },
+  },
+  metalFiresThrown: {
+    desc: 'Metal Fires +1 thrown: atk 1+1=2, thrown 1+1=2, 100% hit vs 0 def → E[dmg]=4.0 (thrown+melee)',
+    a: { atk:1, toHitMod:70, rtbType:'thrown', rtb:1, toHitRtbMod:70, hp:10, abilities: { flameBlade: 'metalFires' } },
+    b: { hp:10 },
+    expected: { dmgToA: 0, dmgToB: 4.000 },
+  },
+  metalFiresWeaponUpgrade: {
+    desc: 'Metal Fires upgrades weapon to magic, bypassing WI: 2+1=3 atk vs WI def=1 100% block → WI skipped, E[dmg]=2.0',
+    a: { atk:2, toHitMod:70, hp:10, abilities: { flameBlade: 'metalFires' } },
+    b: { def:1, toBlkMod:70, hp:10, abilities: { weaponImmunity: true } },
+    expected: { dmgToA: 0, dmgToB: 2.000 },
+  },
+  flameBladeMelee: {
+    desc: 'Flame Blade +2 melee: base 1 atk + FB → 3 atk, 100% hit vs 0 def → E[dmg]=3.0',
+    a: { atk:1, toHitMod:70, hp:10, abilities: { flameBlade: 'flameBlade' } },
+    b: { hp:10 },
+    expected: { dmgToA: 0, dmgToB: 3.000 },
+  },
+  flameBladeMissile: {
+    desc: 'Flame Blade +2 missile: base 1 + FB → 3 rtb, 100% hit vs 0 def → E[dmg]=3.0',
+    a: { rtbType:'missile', rtb:1, toHitRtbMod:70, hp:10, abilities: { flameBlade: 'flameBlade' } },
+    b: { hp:10 },
+    rangedCheck: true, rangedDist: 1,
+    expected: { dmgToA: 0, dmgToB: 3.000 },
+  },
+  flameBladeThrown: {
+    desc: 'Flame Blade +2 thrown: atk 1+2=3, thrown 1+2=3, 100% hit vs 0 def → E[dmg]=6.0 (thrown+melee)',
+    a: { atk:1, toHitMod:70, rtbType:'thrown', rtb:1, toHitRtbMod:70, hp:10, abilities: { flameBlade: 'flameBlade' } },
+    b: { hp:10 },
+    expected: { dmgToA: 0, dmgToB: 6.000 },
+  },
+
   // --- Lucky ---
   luckyToHit: {
     desc: 'Lucky To Hit: 1 atk, base 30% + Lucky +10% = 40% hit vs 0 def → E[dmg] = 0.4',
@@ -849,11 +962,10 @@ const PRESETS = {
     expected: { dmgToA: 0, dmgToB: 0.400 },
   },
   luckyToBlock: {
-    desc: 'Lucky To Block: 1 atk 100% hit vs def 1, base 30% + Lucky +10% = 40% block → E[dmg] = 0.6',
-    version: 'mom_cp_1.60.00',
+    desc: 'Lucky To Block: 1 atk 90% hit (v1.31 Lucky penalty) vs def 1, 40% block → 0.9×0.6 = 0.54',
     a: { atk:1, toHitMod:70, hp:10 },
     b: { def:1, hp:10, abilities: { lucky: true } },
-    expected: { dmgToA: 0, dmgToB: 0.600 },
+    expected: { dmgToA: 0, dmgToB: 0.540 },
   },
   luckyResistance: {
     desc: 'Lucky Resistance: Poison 4 vs base res 5 + Lucky +1 = res 6, pFail 40%, E[dmg] = 1.6',
@@ -862,20 +974,22 @@ const PRESETS = {
     expected: { dmgToA: 0, dmgToB: 1.600 },
   },
   luckyEnemyMeleePenalty131: {
-    desc: 'Lucky v1.31 enemy penalty: B Lucky, A melee 30% → 20%. 1 atk vs 0 def → E[dmg] = 0.2',
+    desc: 'Lucky Enemy Melee Penalty (MoM 1.31): bug — B Lucky, A melee 30% → 20%. 1 atk vs 0 def → E[dmg] = 0.2',
+    version: 'mom_1.31',
     a: { atk:1, hp:10 },
     b: { hp:10, abilities: { lucky: true } },
     expected: { dmgToA: 0, dmgToB: 0.200 },
   },
   luckyEnemyPenaltyNotRanged131: {
-    desc: 'Lucky v1.31: enemy penalty does NOT apply to ranged. Missile 1 atk 30% → still 0.3',
+    desc: 'Lucky Enemy Ranged Penalty (MoM 1.31): enemy penalty does NOT apply to ranged. Missile 1 atk 30% → still 0.3',
+    version: 'mom_1.31',
     a: { rtbType:'missile', rtb:1, hp:10 },
     b: { hp:10, abilities: { lucky: true } },
     rangedCheck: true, rangedDist: 1,
     expected: { dmgToA: 0, dmgToB: 0.300 },
   },
   luckyEnemyPenaltyRemovedPatched: {
-    desc: 'Lucky patched: enemy melee penalty removed in v1.60. 1 atk 30% vs Lucky → still 0.3',
+    desc: 'Lucky Enemy Melee Penalty (MoM CP 1.60): fix — enemy penalty removed. 1 atk 30% vs Lucky → still 0.3',
     version: 'mom_cp_1.60.00',
     a: { atk:1, hp:10 },
     b: { hp:10, abilities: { lucky: true } },
@@ -885,7 +999,8 @@ const PRESETS = {
   // --- Predefined unit matchups (MoM 1.31) ---
   // --- Large Shield ---
   largeShieldRangedMissile: {
-    desc: 'Large Shield Ranged: missile 4 (100% hit) vs def 1+2=3 (100% block) → 4−3=1',
+    desc: 'Large Shield Ranged (MoM 1.31): missile 4 (100% hit) vs def 1+2=3 (100% block) → 4−3=1',
+    version: 'mom_1.31',
     a: { rtbType:'missile', rtb:4, toHitRtbMod:70, hp:10 },
     b: { def:1, toBlkMod:70, hp:10, abilities: { largeShield: true } },
     rangedCheck: true, rangedDist: 1,
@@ -919,7 +1034,7 @@ const PRESETS = {
 
   // --- Large Shield (CoM2: +3) ---
   largeShieldCom2Ranged: {
-    desc: 'Large Shield CoM2: missile 4 (100% hit) vs def 1+3=4 (100% block) → 0',
+    desc: 'Large Shield Ranged (CoM2): missile 4 (100% hit) vs def 1+3=4 (100% block) → 0',
     a: { rtbType:'missile', rtb:4, toHitRtbMod:70, hp:10 },
     b: { def:1, toBlkMod:70, hp:10, abilities: { largeShield: true } },
     rangedCheck: true, rangedDist: 1,
@@ -929,14 +1044,14 @@ const PRESETS = {
 
   // --- Cause Fear (v1.60 fixed behavior) ---
   fearAttackerFixed: {
-    desc: 'Cause Fear v1.60: A fears B normally, no self-fear bug. E[dmgB]=12 (all 4 figs), E[dmgA]=1.5',
+    desc: 'Cause Fear Attacker (MoM CP 1.60): fix — A fears B normally, no self-fear bug. E[dmgB]=12 (all 4 figs), E[dmgA]=1.5',
     version: 'mom_cp_1.60.00',
     a: { figs:4, atk:3, toHitMod:70, hp:10, abilities: { fear: true } },
     b: { atk:3, toHitMod:70, hp:20, def:0, res:5 },
     expected: { dmgToA: 1.500, dmgToB: 12.000 },
   },
   fearDefenderFixed: {
-    desc: 'Cause Fear v1.60: B defending Fear now works, fears A (50%). E[dmgB]=2.5, E[dmgA]=5',
+    desc: 'Cause Fear Defender (MoM CP 1.60): fix — B defending Fear now works, fears A (50%). E[dmgB]=2.5, E[dmgA]=5',
     version: 'mom_cp_1.60.00',
     a: { atk:5, toHitMod:70, hp:10, res:5 },
     b: { atk:5, toHitMod:70, hp:10, def:0, res:5, abilities: { fear: true } },
@@ -972,6 +1087,327 @@ const PRESETS = {
     bUnitName: 'Paladins',
     b: { level: 'ultra_elite', weapon: 'adamantium' },
   },
+
+  // --- Immolation ---
+  immolationMelee: {
+    desc: 'Immolation melee: 1atk 100% hit + immolation(4) 30% hit vs 1fig 0def 10HP → 1 + 1.2 = 2.2',
+    a: { atk:1, toHitMod:70, hp:10, abilities: { immolation: true } },
+    b: { def:0, hp:10 },
+    expected: { dmgToB: 2.200 },
+  },
+  immolationMoMStrength: {
+    desc: 'Immolation Strength (MoM 1.31): strength 4 — 1atk 100% + imm(4)@30% vs 0def 20HP → 1 + 1.2 = 2.2',
+    version: 'mom_1.31',
+    a: { atk:1, toHitMod:70, hp:10, abilities: { immolation: true } },
+    b: { def:0, hp:20 },
+    expected: { dmgToB: 2.200 },
+  },
+  immolationAreaMultiFig: {
+    desc: 'Immolation area vs 4fig 1HP 0def: imm(4)@30% per fig capped at 1HP each + melee 1',
+    a: { atk:1, toHitMod:70, hp:10, abilities: { immolation: true } },
+    b: { figs:4, def:0, hp:1 },
+    expected: { dmgToB: 3.706 },
+  },
+  immolationNoOverflow: {
+    desc: 'Immolation no overflow: vs 2fig 2HP 0def, imm(4)@30% per fig capped at 2HP + melee 1',
+    a: { atk:1, toHitMod:70, hp:10, abilities: { immolation: true } },
+    b: { figs:2, def:0, hp:2 },
+    expected: { dmgToB: 3.095 },
+  },
+  immolationMagicImmunity: {
+    desc: 'Immolation blocked by Magic Immunity: melee 1 only, immolation does 0',
+    a: { atk:1, toHitMod:70, hp:10, abilities: { immolation: true } },
+    b: { def:0, hp:10, abilities: { magicImmunity: true } },
+    expected: { dmgToB: 1.000 },
+  },
+  immolationRighteousness: {
+    desc: 'Immolation blocked by Righteousness: melee 1 only, immolation does 0',
+    a: { atk:1, toHitMod:70, hp:10, abilities: { immolation: true } },
+    b: { def:0, hp:10, abilities: { righteousness: true } },
+    expected: { dmgToB: 1.000 },
+  },
+  immolationFireImmunity: {
+    desc: 'Immolation vs Fire Immunity: def raised to 50, str 4 @ 30% all blocked → melee only',
+    a: { atk:1, toHitMod:70, hp:10, abilities: { immolation: true } },
+    b: { def:0, hp:10, abilities: { fireImmunity: true } },
+    expected: { dmgToB: 1.000 },
+  },
+  immolationBothSides: {
+    desc: 'Both have immolation: A(1fig 1atk) + imm@30% vs B(4fig 1atk 0def 2HP) + imm@30%',
+    a: { atk:1, toHitMod:70, def:0, hp:10, abilities: { immolation: true } },
+    b: { figs:4, atk:1, toHitMod:70, def:0, hp:2, abilities: { immolation: true } },
+    expected: { dmgToA: 5.200, dmgToB: 5.418 },
+  },
+  immolationNotRangedCoM: {
+    desc: 'Immolation + Ranged (CoM): does NOT fire with ranged → missile only (5 100% hit, 0 def = 5 dmg)',
+    version: 'com_6.08',
+    a: { rtbType:'missile', rtb:5, toHitRtbMod:70, hp:10, abilities: { immolation: true } },
+    b: { def:0, hp:20 },
+    rangedCheck: true, rangedDist: 1,
+    expected: { dmgToB: 5.000 },
+  },
+  immolationRangedMoM: {
+    desc: 'Immolation + Ranged (MoM 1.31): fires with ranged → missile 5@100% + imm(4)@30% vs 0def = 5 + 1.2 = 6.2',
+    version: 'mom_1.31',
+    a: { rtbType:'missile', rtb:5, toHitRtbMod:70, hp:10, abilities: { immolation: true } },
+    b: { def:0, hp:20 },
+    rangedCheck: true, rangedDist: 1,
+    expected: { dmgToB: 6.200 },
+  },
+  immolationWithThrown: {
+    desc: 'Immolation + Thrown (MoM 1.31): fires in thrown+melee → thrown 3@100% + imm@30% + melee 1@100% + imm@30% = 6.4',
+    version: 'mom_1.31',
+    a: { atk:1, toHitMod:70, rtbType:'thrown', rtb:3, toHitRtbMod:70, hp:10, abilities: { immolation: true } },
+    b: { def:0, hp:20 },
+    expected: { dmgToB: 6.400 },
+  },
+  immolationCoMStrength10: {
+    desc: 'Immolation Strength (CoM): strength 10 — 1atk 100% + imm(10)@30% vs 0def 20HP → 1 + 3 = 4',
+    version: 'com_6.08',
+    a: { atk:1, toHitMod:70, hp:10, abilities: { immolation: true } },
+    b: { def:0, hp:20 },
+    expected: { dmgToB: 4.000 },
+  },
+  immolationAtkZeroNoFire: {
+    desc: 'Immolation does not fire when melee atk=0 (touchAttackFires check)',
+    a: { atk:0, hp:10, abilities: { immolation: true } },
+    b: { def:0, hp:10 },
+    expected: { dmgToB: 0 },
+  },
+  immolationNotRangedPatched: {
+    desc: 'Immolation + Ranged (MoM CP 1.60): fix — does NOT fire with ranged → missile only (5@100%, 0def = 5)',
+    version: 'mom_cp_1.60.00',
+    a: { rtbType:'missile', rtb:5, toHitRtbMod:70, hp:10, abilities: { immolation: true } },
+    b: { def:0, hp:20 },
+    rangedCheck: true, rangedDist: 1,
+    expected: { dmgToB: 5.000 },
+  },
+  immolationNotThrownPatched: {
+    desc: 'Immolation + Thrown (MoM CP 1.60): fix — melee-only → thrown 3@100% + melee 1@100% + imm@30% = 5.2',
+    version: 'mom_cp_1.60.00',
+    a: { atk:1, toHitMod:70, rtbType:'thrown', rtb:3, toHitRtbMod:70, hp:10, abilities: { immolation: true } },
+    b: { def:0, hp:20 },
+    expected: { dmgToB: 5.200 },
+  },
+
+  // --- Wall of Fire ---
+  wallOfFireBasic: {
+    desc: 'Wall of Fire basic (MoM str 5): 1 atk 100% hit vs 0 def — melee 1, WoF 5@30% vs 0def → 1.5 dmg to A',
+    a: { atk:1, toHitMod:70, def:0, hp:10 },
+    b: { atk:0, def:0, hp:10 },
+    wallOfFire: true,
+    expected: { dmgToA: 1.500, dmgToB: 1.000 },
+  },
+  wallOfFireMultiFig: {
+    desc: 'Wall of Fire area: 4 figs 1hp — each fig binomial(5,0.3) capped at 1hp → 4×(1-0.7^5) = 3.3277',
+    a: { figs:4, atk:1, toHitMod:70, def:0, hp:1 },
+    b: { atk:0, def:0, hp:10 },
+    wallOfFire: true,
+    expected: { dmgToA: 3.3277, dmgToB: 0.6723 },
+  },
+  wallOfFireMagicImmunity: {
+    desc: 'Wall of Fire blocked by Magic Immunity: melee 1 to B, WoF does 0 to A',
+    a: { atk:1, toHitMod:70, def:0, hp:10, abilities: { magicImmunity: true } },
+    b: { atk:0, def:0, hp:10 },
+    wallOfFire: true,
+    expected: { dmgToA: 0, dmgToB: 1.000 },
+  },
+  wallOfFireRighteousness: {
+    desc: 'Wall of Fire blocked by Righteousness: melee 1 to B, WoF does 0 to A',
+    a: { atk:1, toHitMod:70, def:0, hp:10, abilities: { righteousness: true } },
+    b: { atk:0, def:0, hp:10 },
+    wallOfFire: true,
+    expected: { dmgToA: 0, dmgToB: 1.000 },
+  },
+  wallOfFireFireImmunity: {
+    desc: 'Wall of Fire vs Fire Immunity: def raised to 50, str 5 @ 30% all blocked → 0 to A',
+    a: { atk:1, toHitMod:70, def:0, hp:10, abilities: { fireImmunity: true } },
+    b: { atk:0, def:0, hp:10 },
+    wallOfFire: true,
+    expected: { dmgToA: 0, dmgToB: 1.000 },
+  },
+  wallOfFireNotRanged: {
+    desc: 'Wall of Fire does NOT fire during ranged attack (attacker does not pass through)',
+    a: { rtbType:'missile', rtb:1, toHitRtbMod:70, def:0, hp:10 },
+    b: { atk:0, def:0, hp:10 },
+    rangedCheck: true, rangedDist: 1,
+    wallOfFire: true,
+    expected: { dmgToA: 0, dmgToB: 1.000 },
+  },
+  wallOfFireCoM2Strength: {
+    desc: 'Wall of Fire CoM2 strength 10: str 10 @ 30% vs 0 def → mean 3.0 dmg to A',
+    version: 'com2_1.05.11',
+    a: { atk:1, toHitMod:70, def:0, hp:20 },
+    b: { atk:0, def:0, hp:10 },
+    wallOfFire: true,
+    expected: { dmgToA: 3.000, dmgToB: 1.000 },
+  },
+  wallOfFireCoMStrength: {
+    desc: 'Wall of Fire CoM 6.08 strength 10: str 10 @ 30% vs 0 def → mean 3.0 dmg to A',
+    version: 'com_6.08',
+    a: { atk:1, toHitMod:70, def:0, hp:20 },
+    b: { atk:0, def:0, hp:10 },
+    wallOfFire: true,
+    expected: { dmgToA: 3.000, dmgToB: 1.000 },
+  },
+  wallOfFireAfterThrown: {
+    desc: 'WoF sequence: thrown fires at full A count (4×1=4), then WoF kills ~3.33 A figs, melee uses survivors (~0.67) → 4.672',
+    a: { figs:4, atk:1, toHitMod:70, rtbType:'thrown', rtb:1, toHitRtbMod:70, def:0, hp:1 },
+    b: { atk:0, def:0, hp:20 },
+    wallOfFire: true,
+    expected: { dmgToA: 3.328, dmgToB: 4.672 },
+  },
+  wallOfFireAfterGazeCounter: {
+    desc: 'WoF sequence: B gaze 3 overflow kills 1 of 2 A figs (2hp each), WoF targets 1 survivor (1hp) → 3.832 to A, 0.168 to B',
+    a: { figs:2, atk:1, toHitMod:70, def:0, hp:2 },
+    b: { atk:0, def:0, hp:20, toHitRtbMod:70, abilities: { gazeRanged: 3 } },
+    wallOfFire: true,
+    expected: { dmgToA: 3.832, dmgToB: 0.168 },
+  },
+  wallOfFireAfterThrownAndGaze: {
+    desc: 'WoF sequence: thrown (2×1=2 to B), B gaze overflow (3 kills 1 A fig), WoF on 1 survivor, melee → 3.832 to A, 2.168 to B',
+    a: { figs:2, atk:1, toHitMod:70, rtbType:'thrown', rtb:1, toHitRtbMod:70, def:0, hp:2 },
+    b: { atk:0, def:0, hp:20, toHitRtbMod:70, abilities: { gazeRanged: 3 } },
+    wallOfFire: true,
+    expected: { dmgToA: 3.832, dmgToB: 2.168 },
+  },
+  wallOfFireBilateralGaze: {
+    desc: 'WoF with bilateral gaze: A gaze (2 to B) → B gaze (2 to A) → WoF (1.5 to A) → melee 1 + counter 1',
+    a: { atk:1, toHitMod:70, def:0, hp:10, toHitRtbMod:70, abilities: { gazeRanged: 2 } },
+    b: { atk:1, toHitMod:70, def:0, hp:10, toHitRtbMod:70, abilities: { gazeRanged: 2 } },
+    wallOfFire: true,
+    expected: { dmgToA: 4.500, dmgToB: 3.000 },
+  },
+
+  // --- Prayer ---
+  prayerToHit: {
+    desc: 'Prayer To Hit: 1 atk, base 30% + Prayer +10% = 40% hit vs 0 def → 0.4',
+    a: { atk:1, hp:10, abilities: { prayer: 'prayer' } },
+    b: { hp:10 },
+    expected: { dmgToA: 0, dmgToB: 0.400 },
+  },
+  prayerToHitRanged: {
+    desc: 'Prayer To Hit Ranged: missile 1 atk, base 30% + Prayer +10% = 40% hit vs 0 def → 0.4',
+    a: { rtbType:'missile', rtb:1, hp:10, abilities: { prayer: 'prayer' } },
+    b: { hp:10 },
+    rangedCheck: true, rangedDist: 1,
+    expected: { dmgToA: 0, dmgToB: 0.400 },
+  },
+  prayerToBlock: {
+    desc: 'Prayer To Block: 1 atk 90% hit (v1.31 Prayer penalty) vs def 1, 40% block → 0.9×0.6 = 0.54',
+    a: { atk:1, toHitMod:70, hp:10 },
+    b: { def:1, hp:10, abilities: { prayer: 'prayer' } },
+    expected: { dmgToA: 0, dmgToB: 0.540 },
+  },
+  prayerResistance: {
+    desc: 'Prayer Resistance: Poison 4 vs base res 5 + Prayer +1 = res 6, pFail 40%, E[dmg] = 1.6',
+    a: { atk:1, toHitMod:70, hp:10, abilities: { poison: 4 } },
+    b: { def:1, toBlkMod:70, res:5, hp:10, abilities: { prayer: 'prayer' } },
+    expected: { dmgToA: 0, dmgToB: 1.600 },
+  },
+  prayerEnemyMeleePenalty131: {
+    desc: 'Prayer Enemy Melee Penalty (MoM 1.31): bug — B Prayer, A melee 30% → 20%. 1 atk vs 0 def → 0.2',
+    version: 'mom_1.31',
+    a: { atk:1, hp:10 },
+    b: { hp:10, abilities: { prayer: 'prayer' } },
+    expected: { dmgToA: 0, dmgToB: 0.200 },
+  },
+  prayerEnemyPenaltyNotRanged131: {
+    desc: 'Prayer Enemy Ranged Penalty (MoM 1.31): enemy penalty does NOT apply to ranged. Missile 1 atk 30% → still 0.3',
+    version: 'mom_1.31',
+    a: { rtbType:'missile', rtb:1, hp:10 },
+    b: { hp:10, abilities: { prayer: 'prayer' } },
+    rangedCheck: true, rangedDist: 1,
+    expected: { dmgToA: 0, dmgToB: 0.300 },
+  },
+  prayerEnemyPenaltyRemovedPatched: {
+    desc: 'Prayer Enemy Melee Penalty (MoM CP 1.60): fix — enemy penalty removed. 1 atk 30% vs Prayer → still 0.3',
+    version: 'mom_cp_1.60.00',
+    a: { atk:1, hp:10 },
+    b: { hp:10, abilities: { prayer: 'prayer' } },
+    expected: { dmgToA: 0, dmgToB: 0.300 },
+  },
+
+  // --- High Prayer ---
+  highPrayerMeleeAtk: {
+    desc: 'High Prayer Melee Atk: base 1 atk + HP +2 = 3 atk, 100% hit vs 0 def → 3 dmg',
+    a: { atk:1, toHitMod:70, hp:10, abilities: { prayer: 'highPrayer' } },
+    b: { hp:10 },
+    expected: { dmgToA: 0, dmgToB: 3.000 },
+  },
+  highPrayerDefense: {
+    desc: 'High Prayer Defense: missile 4 100% hit vs base def 1 + HP +2 = 3, 100% block → 4−3 = 1 (def 2 would give 2)',
+    a: { rtbType:'missile', rtb:4, toHitRtbMod:70, hp:10 },
+    b: { def:1, toBlkMod:70, hp:10, abilities: { prayer: 'highPrayer' } },
+    rangedCheck: true, rangedDist: 1,
+    expected: { dmgToA: 0, dmgToB: 1.000 },
+  },
+  highPrayerResistance: {
+    desc: 'High Prayer Resistance: Poison 4 vs base res 5 + HP +3 = res 8, pFail 20%, E[dmg] = 0.8',
+    a: { atk:1, toHitMod:70, hp:10, abilities: { poison: 4 } },
+    b: { def:1, toBlkMod:70, res:5, hp:10, abilities: { prayer: 'highPrayer' } },
+    expected: { dmgToA: 0, dmgToB: 0.800 },
+  },
+  highPrayerToHit: {
+    desc: 'High Prayer To Hit: missile 1, base 30% + HP +10% = 40% hit vs 0 def → 0.4 (ranged isolates from +2 melee)',
+    a: { rtbType:'missile', rtb:1, hp:10, abilities: { prayer: 'highPrayer' } },
+    b: { hp:10 },
+    rangedCheck: true, rangedDist: 1,
+    expected: { dmgToA: 0, dmgToB: 0.400 },
+  },
+  highPrayerToBlock: {
+    desc: 'High Prayer To Block: missile 10 100% hit vs def 8 + HP +2 = 10, 40% block → 10−4 = 6.0 (30% would give 7.0)',
+    a: { rtbType:'missile', rtb:10, toHitRtbMod:70, hp:10 },
+    b: { def:8, hp:20, abilities: { prayer: 'highPrayer' } },
+    rangedCheck: true, rangedDist: 1,
+    expected: { dmgToA: 0, dmgToB: 6.000 },
+  },
+  highPrayerMeleeNotRanged: {
+    desc: 'High Prayer +2 melee does NOT boost ranged: missile 3, 100% hit, HP → still 3 (not 5)',
+    a: { rtbType:'missile', rtb:3, toHitRtbMod:70, hp:10, abilities: { prayer: 'highPrayer' } },
+    b: { hp:10 },
+    rangedCheck: true, rangedDist: 1,
+    expected: { dmgToA: 0, dmgToB: 3.000 },
+  },
+  highPrayerCombined: {
+    desc: 'High Prayer combined: atk 3+2=5 at 40% (30+10) vs 0 def → 5×0.4 = 2.0',
+    a: { atk:3, hp:10, abilities: { prayer: 'highPrayer' } },
+    b: { hp:10 },
+    expected: { dmgToA: 0, dmgToB: 2.000 },
+  },
+
+  // --- Black Prayer ---
+  blackPrayerAtkPenalty: {
+    desc: 'Black Prayer Atk: base 2 atk − 1 = 1, 100% hit vs 0 def → 1 dmg',
+    a: { atk:2, toHitMod:70, hp:10, abilities: { blackPrayer: true } },
+    b: { hp:10 },
+    expected: { dmgToA: 0, dmgToB: 1.000 },
+  },
+  blackPrayerDefPenalty: {
+    desc: 'Black Prayer Def: 2 atk 100% hit vs base def 2 − 1 = 1, 100% block → 1 dmg',
+    a: { atk:2, toHitMod:70, hp:10 },
+    b: { def:2, toBlkMod:70, hp:10, abilities: { blackPrayer: true } },
+    expected: { dmgToA: 0, dmgToB: 1.000 },
+  },
+  blackPrayerResPenalty: {
+    desc: 'Black Prayer Res: 1 atk (100% blocked: def 2−1=1 at 100%) + Poison 4 vs res 5−2=3, pFail 70%, E[dmg] = 2.8',
+    a: { atk:1, toHitMod:70, hp:10, abilities: { poison: 4 } },
+    b: { def:2, toBlkMod:70, res:5, hp:10, abilities: { blackPrayer: true } },
+    expected: { dmgToA: 0, dmgToB: 2.800 },
+  },
+  blackPrayerRangedAtk: {
+    desc: 'Black Prayer Ranged Atk: base 2 missile − 1 = 1, 100% hit vs 0 def → 1 dmg',
+    a: { rtbType:'missile', rtb:2, toHitRtbMod:70, hp:10, abilities: { blackPrayer: true } },
+    b: { hp:10 },
+    rangedCheck: true, rangedDist: 1,
+    expected: { dmgToA: 0, dmgToB: 1.000 },
+  },
+  blackPrayerThrownAtk: {
+    desc: 'Black Prayer Thrown Atk: base thrown 2 − 1 = 1, 100% hit vs 0 def → 1 thrown + base melee 2 − 1 = 1 at 100% hit → 2 total',
+    a: { atk:2, rtbType:'thrown', rtb:2, toHitMod:70, toHitRtbMod:70, hp:10, abilities: { blackPrayer: true } },
+    b: { atk:0, hp:10 },
+    expected: { dmgToA: 0, dmgToB: 2.000 },
+  },
 };
 
 const TEST_TREE = [
@@ -1002,10 +1438,18 @@ const TEST_TREE = [
       { name: 'Fire Immunity', keys: ['fireImmunityFireBreath', 'fireImmunityNotMelee', 'fireImmunityNotThrown', 'fireImmunityNotMissile', 'fireImmunityAfterArmorPiercing', 'fireImmunityIllusionOverrides'] },
       { name: 'Cause Fear', keys: ['fearBasic', 'fearDefenderNoop', 'fearDeathImmune', 'fearMagicImmune', 'fearNotRanged'] },
       { name: 'Illusion', keys: ['illusionMelee', 'illusionRanged', 'illusionThrown', 'illusionCounter', 'illusionImmunityNegates', 'illusionCityWalls', 'illusionOverridesWeaponImmunity'] },
+      { name: 'Invisibility', keys: ['invisibilityMelee', 'invisibilityRangedBlocked', 'invisibilityRangedIllusionImmune', 'invisibilityCounter', 'invisibilityIllusionImmuneNoPenalty', 'invisibilityDoomIgnores'] },
       { name: 'Holy Bonus', keys: ['holyBonusMeleeAtk', 'holyBonusDef', 'holyBonusRes', 'holyBonusRangedMoM'] },
       { name: 'Resistance to All', keys: ['resistanceToAllBasic', 'resistanceToAllCap', 'holyBonusPlusResistanceToAll'] },
-      { name: 'Lucky', keys: ['luckyToHit', 'luckyToHitRanged', 'luckyResistance', 'luckyEnemyMeleePenalty131', 'luckyEnemyPenaltyNotRanged131'] },
+      { name: 'Lucky', keys: ['luckyToHit', 'luckyToHitRanged', 'luckyToBlock', 'luckyResistance', 'luckyEnemyMeleePenalty131', 'luckyEnemyPenaltyNotRanged131'] },
+      { name: 'Prayer', keys: ['prayerToHit', 'prayerToHitRanged', 'prayerToBlock', 'prayerResistance', 'prayerEnemyMeleePenalty131', 'prayerEnemyPenaltyNotRanged131'] },
+      { name: 'High Prayer', keys: ['highPrayerMeleeAtk', 'highPrayerDefense', 'highPrayerResistance', 'highPrayerToHit', 'highPrayerToBlock', 'highPrayerMeleeNotRanged', 'highPrayerCombined'] },
+      { name: 'Stone Skin / Iron Skin', keys: ['stoneSkinDef', 'ironSkinDef'] },
+      { name: 'Metal Fires / Flame Blade', keys: ['metalFiresMelee', 'metalFiresMissile', 'metalFiresNotBoulder', 'metalFiresThrown', 'metalFiresWeaponUpgrade', 'flameBladeMelee', 'flameBladeMissile', 'flameBladeThrown'] },
+      { name: 'Black Prayer', keys: ['blackPrayerAtkPenalty', 'blackPrayerDefPenalty', 'blackPrayerResPenalty', 'blackPrayerRangedAtk', 'blackPrayerThrownAtk'] },
       { name: 'Large Shield', keys: ['largeShieldRangedMissile', 'largeShieldMeleeNoEffect', 'largeShieldThrown', 'largeShieldArmorPiercing', 'largeShieldFireBreath'] },
+      { name: 'Immolation', keys: ['immolationMelee', 'immolationAreaMultiFig', 'immolationNoOverflow', 'immolationMagicImmunity', 'immolationRighteousness', 'immolationFireImmunity', 'immolationBothSides', 'immolationRangedMoM', 'immolationWithThrown', 'immolationAtkZeroNoFire'] },
+      { name: 'Wall of Fire', keys: ['wallOfFireBasic', 'wallOfFireMultiFig', 'wallOfFireMagicImmunity', 'wallOfFireRighteousness', 'wallOfFireFireImmunity', 'wallOfFireNotRanged', 'wallOfFireAfterThrown', 'wallOfFireAfterGazeCounter', 'wallOfFireAfterThrownAndGaze', 'wallOfFireBilateralGaze'] },
     ],
   },
   {
@@ -1025,12 +1469,15 @@ const TEST_TREE = [
     ],
   },
   { name: 'Version differences tests', subs: [
-      { name: 'Weapon Immunity', keys: ['weaponImmunityThrownPatched', 'weaponImmunityCom2Melee', 'weaponImmunityCom2Ranged'] },
-      { name: 'Missile Immunity + WI fix', keys: ['missileImmunityWIOverwriteFixed'] },
-      { name: 'Holy Bonus Ranged (CoM2)', keys: ['holyBonusRangedCoM2'] },
-      { name: 'Lucky (patched)', keys: ['luckyToBlock', 'luckyEnemyPenaltyRemovedPatched'] },
-      { name: 'Large Shield (CoM2: +3)', keys: ['largeShieldCom2Ranged'] },
-      { name: 'Cause Fear (fixed)', keys: ['fearAttackerFixed', 'fearDefenderFixed'] },
+      { name: 'Weapon Immunity', keys: ['weaponImmunityThrown131', 'weaponImmunityThrownPatched', 'weaponImmunityMelee', 'weaponImmunityCom2Melee'] },
+      { name: 'Missile Immunity', keys: ['missileImmunityWIOverwrite131', 'missileImmunityWIOverwriteFixed'] },
+      { name: 'Holy Bonus', keys: ['holyBonusRangedMoM', 'holyBonusRangedCoM2'] },
+      { name: 'Lucky', keys: ['luckyEnemyMeleePenalty131', 'luckyEnemyPenaltyRemovedPatched'] },
+      { name: 'Large Shield', keys: ['largeShieldRangedMissile', 'largeShieldCom2Ranged'] },
+      { name: 'Cause Fear', keys: ['fearBasic', 'fearAttackerFixed', 'fearDefenderNoop', 'fearDefenderFixed'] },
+      { name: 'Immolation', keys: ['immolationRangedMoM', 'immolationNotRangedPatched', 'immolationWithThrown', 'immolationNotThrownPatched', 'immolationMoMStrength', 'immolationCoMStrength10'] },
+      { name: 'Wall of Fire', keys: ['wallOfFireBasic', 'wallOfFireCoM2Strength', 'wallOfFireCoMStrength'] },
+      { name: 'Prayer', keys: ['prayerEnemyMeleePenalty131', 'prayerEnemyPenaltyRemovedPatched'] },
     ],
   },
 ];

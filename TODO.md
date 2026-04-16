@@ -32,3 +32,9 @@ VERIFIED UNITS.DAT ACCURATE IN-GAME CoM2
 - No thrown or breath with attack 0
 
 - Generic units ignore weapon immunity?
+
+- When did Large shield change
+
+- Change default test cases to be based on CoM2
+
+- Implement CoM defender roll logic

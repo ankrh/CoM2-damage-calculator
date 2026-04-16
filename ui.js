@@ -307,6 +307,13 @@ function readUnitStats(prefix) {
   const res = Math.max(0, baseRes + lvl.res + abilMods.resMod + nodeBonus + darkLightBonus);
   const hp  = Math.max(1, baseHP + lvl.hp + abilMods.hpMod);
 
+  // Metal Fires / Flame Blade: +1/+2 to missile and thrown rtb only (not boulder, magic).
+  // Also upgrades normal weapon to magic for Weapon Immunity purposes.
+  const fbVal = (abilities.flameBlade) || 'none';
+  const fbAtkBonus = fbVal === 'flameBlade' ? 2 : (fbVal === 'metalFires' ? 1 : 0);
+  const fbRtbMod = fbAtkBonus > 0 && (rangedType === 'missile' || thrownType === 'thrown') ? fbAtkBonus : 0;
+  const effectiveWeapon = (fbAtkBonus > 0 && weapon === 'normal') ? 'magic' : weapon;
+
   // Ranged/Thrown/Breath strength
   let rtbLvl = 0, rtbWpn = 0;
   if (rangedType !== 'none') {
@@ -316,7 +323,7 @@ function readUnitStats(prefix) {
     rtbLvl = lvl.thrown;
     rtbWpn = (baseRtb > 0 && thrownGetsWpn) ? wpn.atk : 0;
   }
-  const rtb = baseRtb > 0 ? Math.max(0, baseRtb + rtbLvl + rtbWpn + abilMods.rtbMod + nodeBonus + darkLightBonus) : 0;
+  const rtb = baseRtb > 0 ? Math.max(0, baseRtb + rtbLvl + rtbWpn + abilMods.rtbMod + fbRtbMod + nodeBonus + darkLightBonus) : 0;
 
   // Hidden gaze ranged attack: affected by same modifiers as ranged (level, node aura,
   // darkness/light, ability mods) but NOT weapon bonuses. In v1.31, if reduced to 0 the
@@ -351,6 +358,8 @@ function readUnitStats(prefix) {
   const toHitMelee = clampPct(30, baseToHitMod + meleeToHitBonus);
   const toHitRtb = clampPct(30, baseToHitRtbMod + lvl.toHit + rtbToHitWpn + rtbDistPenalty + abilMods.toHitMod);
   const toBlock = clampPct(30, baseToBlkMod + abilMods.toBlkMod);
+  // Immolation To Hit: always base 30%, ignoring all modifiers (it's a spell attack)
+  const toHitImmolation = 0.3;
 
   return {
     // Base values (for display)
@@ -358,7 +367,7 @@ function readUnitStats(prefix) {
     baseToHitMod, baseToHitRtbMod, baseToBlkMod,
     // Bonus breakdown (for display)
     atkBonus: baseAtk > 0 ? lvl.atk + wpn.atk + abilMods.atkMod + nodeBonus + darkLightBonus : 0,
-    rtbBonus: baseRtb > 0 ? rtbLvl + rtbWpn + abilMods.rtbMod + nodeBonus + darkLightBonus : 0,
+    rtbBonus: baseRtb > 0 ? rtbLvl + rtbWpn + abilMods.rtbMod + fbRtbMod + nodeBonus + darkLightBonus : 0,
     defBonus: lvl.def + wpn.def + cityWallBonus + abilMods.defMod + nodeBonus + darkLightBonus,
     resBonus: lvl.res + abilMods.resMod + nodeBonus + darkLightBonus,
     hpBonus: lvl.hp + abilMods.hpMod,
@@ -368,14 +377,14 @@ function readUnitStats(prefix) {
     rtbDistPenalty,
     // Effective values (for calculation)
     figs: Math.max(1, parseInt(document.getElementById(prefix + 'Figs').value) || 1),
-    atk, def, res, hp, rtb, effectiveGazeRanged, effectiveDoomGaze, weapon, unitType: unitTypeVal,
+    atk, def, res, hp, rtb, effectiveGazeRanged, effectiveDoomGaze, weapon: effectiveWeapon, unitType: unitTypeVal,
     dmg: Math.max(0, parseInt(document.getElementById(prefix + 'Dmg').value) || 0),
     rangedType, thrownType,
     rangedGetsWpn, thrownGetsWpn,
     cityWallBonus,
     wpn, lvl,
     // Pre-clamped combat values
-    toHitMelee, toHitRtb, toBlock,
+    toHitMelee, toHitRtb, toHitImmolation, toBlock,
     // Abilities (for combat flow modifiers)
     abilities,
   };
@@ -400,11 +409,13 @@ function updateModifiedDisplay(prefix, stats) {
     }
   }
 
-  function showModPct(id, effective, base) {
+  // Show the total percentage whenever it differs from the default 30%.
+  function showModPct(id, effective) {
     const el = document.getElementById(id);
     if (!el) return;
-    if (effective !== base) {
-      el.textContent = Math.round(effective * 100) + '%';
+    const pct = Math.round(effective * 100);
+    if (pct !== 30) {
+      el.textContent = pct + '%';
       el.classList.add('visible');
     } else {
       el.textContent = '';
@@ -418,12 +429,9 @@ function updateModifiedDisplay(prefix, stats) {
   showMod(prefix + 'ResMod', s.res, s.baseRes);
   showMod(prefix + 'HPMod', s.hp, s.baseHP);
 
-  const baseMeleeToHit = clampPct(30, s.baseToHitMod);
-  const baseRtbToHit = clampPct(30, s.baseToHitRtbMod);
-  const baseToBlock = clampPct(30, s.baseToBlkMod);
-  showModPct(prefix + 'ToHitMeleeMod', s.toHitMelee, baseMeleeToHit);
-  showModPct(prefix + 'ToHitRtbModDisp', s.toHitRtb, baseRtbToHit);
-  showModPct(prefix + 'ToBlkModDisp', s.toBlock, baseToBlock);
+  showModPct(prefix + 'ToHitMeleeMod', s.toHitMelee);
+  showModPct(prefix + 'ToHitRtbModDisp', s.toHitRtb);
+  showModPct(prefix + 'ToBlkModDisp', s.toBlock);
 }
 
 // --- Level Bonuses ---
@@ -793,8 +801,9 @@ function recalculate() {
 
   const isRanged = document.getElementById('rangedCheck').checked && a.rangedType !== 'none' && a.rtb > 0;
   const version = document.getElementById('gameVersion').value;
+  const wallOfFire = document.getElementById('wallOfFire').checked;
 
-  const result = resolveCombat(a, b, { isRanged, version });
+  const result = resolveCombat(a, b, { isRanged, version, wallOfFire });
 
   const aFirstFigRem = a.hp > 0 && a.dmg % a.hp !== 0 ? a.hp - (a.dmg % a.hp) : a.hp;
   const bFirstFigRem = b.hp > 0 && b.dmg % b.hp !== 0 ? b.hp - (b.dmg % b.hp) : b.hp;
@@ -818,6 +827,17 @@ function updateTypeVisibility() {
     const input = sel.nextElementSibling;
     if (input) input.classList.toggle('disabled-field', sel.value === 'none');
   });
+
+  // Metal Fires / Flame Blade only affect Normal units and Heroes, not Fantastic units.
+  for (const prefix of ['a', 'b']) {
+    const unitTypeSel = document.getElementById(prefix + 'Abil_unitType');
+    const isFantastic = unitTypeSel && unitTypeSel.value.startsWith('fantastic_');
+    const fbSel = document.getElementById(prefix + 'Abil_flameBlade');
+    if (fbSel) {
+      if (isFantastic) fbSel.value = 'none';
+      fbSel.disabled = isFantastic;
+    }
+  }
 
   const aRtbVal = parseInt(document.getElementById('aRtb').value) || 0;
   const hasRanged = RANGED_TYPES.includes(document.getElementById('aRtbType').value) && aRtbVal > 0;
@@ -899,6 +919,7 @@ function applyPreset(name) {
   document.getElementById('cityWalls').value = preset.cityWalls || 'none';
   document.getElementById('nodeAura').value = preset.nodeAura || 'none';
   document.getElementById('enchLightDark').value = preset.enchLightDark || 'none';
+  document.getElementById('wallOfFire').checked = preset.wallOfFire || false;
   updateTypeVisibility();
   updateAbilityVisibility();
   recalculate();
@@ -916,14 +937,16 @@ function runTests(tolerance) {
     const panels = document.querySelectorAll('.dist-header .avg');
     const dmgToA = parseFloat(panels[0].textContent);
     const dmgToB = parseFloat(panels[1].textContent);
-    const errA = Math.abs(dmgToA - preset.expected.dmgToA);
-    const errB = Math.abs(dmgToB - preset.expected.dmgToB);
+    const expA = preset.expected.dmgToA;
+    const expB = preset.expected.dmgToB;
+    const errA = expA != null ? Math.abs(dmgToA - expA) : 0;
+    const errB = expB != null ? Math.abs(dmgToB - expB) : 0;
     const pass = errA < tolerance && errB < tolerance;
     if (!pass) allPassed = false;
     results.push({
       name, pass,
-      dmgToA, expectedA: preset.expected.dmgToA, errA: +errA.toFixed(4),
-      dmgToB, expectedB: preset.expected.dmgToB, errB: +errB.toFixed(4),
+      dmgToA, expectedA: expA, errA: +errA.toFixed(4),
+      dmgToB, expectedB: expB, errB: +errB.toFixed(4),
     });
   }
   const failures = results.filter(r => !r.pass);
@@ -1082,7 +1105,7 @@ document.querySelectorAll('.abil-item').forEach(item => {
     const title = parts[0];
     const sub = parts[1] || '';
     const exp = preset.expected;
-    const expLine = exp ? `E[A]=${exp.dmgToA.toFixed(3)} E[B]=${exp.dmgToB.toFixed(3)}` : '';
+    const expLine = exp ? `${exp.dmgToA != null ? `E[A]=${exp.dmgToA.toFixed(3)}` : ''}${exp.dmgToA != null && exp.dmgToB != null ? ' ' : ''}${exp.dmgToB != null ? `E[B]=${exp.dmgToB.toFixed(3)}` : ''}` : '';
     const btn = document.createElement('button');
     btn.onclick = () => applyPreset(name);
     btn.innerHTML = `${title}<br><small>${sub}</small>` +

@@ -71,7 +71,13 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8000/)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8080/)",
       "mcp__playwright__browser_fill_form",
-      "Bash(node -c data.js)"
+      "Bash(node -c data.js)",
+      "Bash(node -e \"require\\('./engine.js'\\); require\\('./combat.js'\\)\")",
+      "Bash(node -c engine.js)",
+      "Bash(node -c combat.js)",
+      "Bash(curl -v http://localhost:8080/)",
+      "Bash(taskkill //F //IM python.exe)",
+      "Bash(ls c:\\\\\\\\CoM2-damage-calculator/)"
     ]
   }
 }

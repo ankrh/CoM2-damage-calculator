@@ -86,6 +86,41 @@ function calcTotalDamageDist(atkFigs, atkStr, toHit, defStr, toBlock, hp, cap) {
   return result;
 }
 
+// Per-figure damage distribution for area damage (no overflow between figures).
+// Each target figure independently takes min(hp, max(0, hits - blocks)) damage.
+// Unlike singleAttackDmgDist, excess damage beyond hp is lost (not carried to the next figure).
+function areaPerFigureDmgDist(atkStr, toHit, defStr, toBlock, hp) {
+  const hitsPMF = binomialPMF(atkStr, toHit);
+  const blocksPMF = binomialPMF(defStr, toBlock);
+  const maxDmg = Math.min(atkStr, hp);
+  const dist = new Array(maxDmg + 1).fill(0);
+  for (let h = 0; h <= atkStr; h++) {
+    if (hitsPMF[h] < 1e-15) continue;
+    for (let b = 0; b <= defStr; b++) {
+      if (blocksPMF[b] < 1e-15) continue;
+      dist[Math.min(hp, Math.max(0, h - b))] += hitsPMF[h] * blocksPMF[b];
+    }
+  }
+  return dist;
+}
+
+// Compute area damage distribution: each of `targetFigs` figures independently
+// takes damage from an attack of strength `atkStr`. No overflow between figures.
+// Used for Immolation, Fireball, and other area-damage effects.
+function calcAreaDamageDist(targetFigs, atkStr, toHit, defStr, toBlock, hp, cap) {
+  if (targetFigs <= 0 || atkStr <= 0) return [1];
+  const single = areaPerFigureDmgDist(atkStr, toHit, defStr, toBlock, hp);
+  let result = [1];
+  let base = single;
+  let n = targetFigs;
+  while (n > 0) {
+    if (n & 1) result = convolveDists(result, base, cap);
+    n >>= 1;
+    if (n > 0) base = convolveDists(base, base, cap);
+  }
+  return result;
+}
+
 // Compute resistance-based damage distribution (for Poison Touch, etc.).
 // Each roll is an independent Bernoulli trial: fail → 1 damage.
 // numRolls: total resistance rolls (attacking figures × strength per figure)
