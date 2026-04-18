@@ -5,11 +5,14 @@ Extracts the article body from the 'mw-parser-output' div,
 strips navigation/UI chrome, and converts to readable markdown.
 
 Usage:
-    python htm_to_md.py <input.htm>              # prints to stdout
-    python htm_to_md.py <input.htm> -o out.md    # writes to file
-    python htm_to_md.py --all <directory>         # converts all top-level .htm in dir
-    python .\tools\htm_to_md.py --all "C:\CoM2-damage-calculator\Manuals\MoM source - Fandom site\saved pages"
+    python htm_to_md.py                           # convert all .htm/.html in the default saved-pages dir, skipping already-converted files
+    python htm_to_md.py <input.htm>               # prints to stdout
+    python htm_to_md.py <input.htm> -o out.md     # writes to file
+    python htm_to_md.py --all <directory>         # converts all top-level .htm/.html in dir (skips already-converted)
+    python htm_to_md.py --force                   # re-convert even if .md already exists
 """
+
+DEFAULT_DIR = r"C:\CoM2-damage-calculator\Manuals\MoM source - Fandom site\saved pages"
 
 import sys
 import os
@@ -72,27 +75,52 @@ def convert_htm_to_md(input_path):
     return md.strip()
 
 
+def convert_directory(directory, force=False, output_dir=None):
+    """Convert all top-level .htm/.html files in directory, skipping already-converted files unless force=True.
+
+    Output .md files are written to output_dir (defaults to the parent of directory).
+    """
+    if output_dir is None:
+        output_dir = os.path.dirname(os.path.abspath(directory))
+    os.makedirs(output_dir, exist_ok=True)
+    converted = 0
+    skipped = 0
+    for fname in sorted(os.listdir(directory)):
+        if fname.startswith("."):
+            continue
+        lower = fname.lower()
+        if not (lower.endswith(".htm") or lower.endswith(".html")):
+            continue
+        input_path = os.path.join(directory, fname)
+        base_name = fname.replace(" _ Master of Magic Wiki _ Fandom", "")
+        output_name = base_name.rsplit(".", 1)[0] + ".md"
+        output_path = os.path.join(output_dir, output_name)
+        if not force and os.path.exists(output_path):
+            print(f"  skip (md exists): {fname}")
+            skipped += 1
+            continue
+        md = convert_htm_to_md(input_path)
+        with open(output_path, "w", encoding="utf-8") as f:
+            f.write(md)
+        print(f"  {fname} -> {output_name}")
+        converted += 1
+    print(f"Done. Converted {converted}, skipped {skipped}.")
+
+
 def main():
-    if len(sys.argv) < 2:
-        print(__doc__)
-        sys.exit(1)
+    # No args, or --force: convert the default directory
+    if len(sys.argv) < 2 or sys.argv[1] == "--force":
+        force = len(sys.argv) >= 2 and sys.argv[1] == "--force"
+        convert_directory(DEFAULT_DIR, force=force)
+        return
 
     if sys.argv[1] == "--all":
         if len(sys.argv) < 3:
-            print("Usage: htm_to_md.py --all <directory>")
+            print("Usage: htm_to_md.py --all <directory> [--force]")
             sys.exit(1)
         directory = sys.argv[2]
-        # Only convert top-level .htm files (not those in _files subdirs)
-        for fname in sorted(os.listdir(directory)):
-            if fname.endswith(".htm") and not fname.startswith("."):
-                input_path = os.path.join(directory, fname)
-                base_name = fname.replace(" _ Master of Magic Wiki _ Fandom", "")
-                output_name = base_name.rsplit(".", 1)[0] + ".md"
-                output_path = os.path.join(directory, output_name)
-                md = convert_htm_to_md(input_path)
-                with open(output_path, "w", encoding="utf-8") as f:
-                    f.write(md)
-                print(f"  {fname} -> {output_name}")
+        force = "--force" in sys.argv[3:]
+        convert_directory(directory, force=force)
     else:
         input_path = sys.argv[1]
         md = convert_htm_to_md(input_path)

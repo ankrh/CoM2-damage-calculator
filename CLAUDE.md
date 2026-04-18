@@ -2,11 +2,11 @@
 
 ## Key Files
 - `Manuals/MoM source - Fandom site/` — Primary source for MoM game mechanics. Use these wiki-sourced .md files to determine how combat abilities, damage types, and immunities work.
-- `MoM Combat Mechanics Reference.md` — Condensed combat mechanics reference summarizing the above.
-- `README.md` — Project overview and phased implementation plan.
+- `Reference docs/MoM Combat Mechanics Reference.md` — Condensed combat mechanics reference summarizing the above.
+- `Reference docs/Damage calculation version differences.md` — Documents how damage calculation differs between MoM 1.31, MoM 1.60, and CoM2.
 
 ## Rules
-- When implementing a new mechanic, read the relevant .md files in `Manuals/MoM source - Fandom site/` first to understand the exact rules.
+- When implementing a new mechanic, read the relevant .md files in `Manuals/MoM source - Fandom site/` first to understand the exact rules. Also check `Reference docs/Damage calculation version differences.md` for version-specific behavior.
 - Use exact probability distributions (binomial math), not Monte Carlo simulation.
 - MoM uses 10% increments for To Hit / To Block. CoM2 uses 1% increments (Phase 4).
 
