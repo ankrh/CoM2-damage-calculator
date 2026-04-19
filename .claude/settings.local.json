@@ -77,7 +77,9 @@
       "Bash(node -c combat.js)",
       "Bash(curl -v http://localhost:8080/)",
       "Bash(taskkill //F //IM python.exe)",
-      "Bash(ls c:\\\\\\\\CoM2-damage-calculator/)"
+      "Bash(ls c:\\\\\\\\CoM2-damage-calculator/)",
+      "Bash(node -e ' *)",
+      "Read(//tmp/**)"
     ]
   }
 }

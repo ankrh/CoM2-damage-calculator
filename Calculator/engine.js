@@ -17,13 +17,52 @@ function binomialPMF(n, p) {
   return pmf;
 }
 
+// Compute distribution of surviving hits after Blur filtering.
+// h: number of initial hits; blurChance: probability each hit is negated (0.1 or 0.2).
+// buggy (v1.31): on success, skip next roll — max 50% blocked regardless of luck.
+// Returns array where dist[s] = P(exactly s hits survive).
+function blurSurvivingDist(h, blurChance, buggy) {
+  if (!blurChance || h === 0) {
+    const d = new Array(h + 1).fill(0); d[h] = 1; return d;
+  }
+  if (!buggy) {
+    return binomialPMF(h, 1 - blurChance);
+  }
+  // v1.31 bug: success skips next roll. DP on number of hits negated.
+  // negated(h) = blurChance * addOne(negated(h-2)) + (1-blurChance) * negated(h-1)
+  let prev2 = [1]; // negated(0)
+  if (h === 1) return [blurChance, 1 - blurChance]; // [0 survive, 1 survive]
+  let prev1 = [1 - blurChance, blurChance]; // negated(1)
+  for (let i = 2; i <= h; i++) {
+    const newF = new Array(i + 1).fill(0);
+    for (let n = 0; n < prev2.length; n++) {
+      if (prev2[n] < 1e-15) continue;
+      newF[n + 1] += blurChance * prev2[n];
+    }
+    for (let n = 0; n < prev1.length; n++) {
+      if (prev1[n] < 1e-15) continue;
+      newF[n] += (1 - blurChance) * prev1[n];
+    }
+    prev2 = prev1;
+    prev1 = newF;
+  }
+  // prev1 = negated distribution for h hits; convert to surviving
+  const survivingDist = new Array(h + 1).fill(0);
+  for (let neg = 0; neg < prev1.length; neg++) {
+    if (prev1[neg] < 1e-15) continue;
+    survivingDist[h - neg] += prev1[neg];
+  }
+  return survivingDist;
+}
+
 // Compute damage distribution for a single figure's attack against a multi-figure target.
 // Returns an array where dist[d] = probability of dealing exactly d damage.
 // Handles overflow: when a hit kills a figure (damage >= hp), excess hits roll
 // against the next figure with fresh defense rolls.
 // invulnBonus: Invulnerability reduces incoming damage by this amount per defense roll,
 // triggering again on every chained figure's fresh defense roll (default 0).
-function singleAttackDmgDist(atkStr, toHit, defStr, toBlock, hp, invulnBonus) {
+// blurChance/blurBuggy: Blur pre-defense hit negation (0 = no blur).
+function singleAttackDmgDist(atkStr, toHit, defStr, toBlock, hp, invulnBonus, blurChance, blurBuggy) {
   const hitsPMF = binomialPMF(atkStr, toHit);
   const blocksPMF = binomialPMF(defStr, toBlock);
   const inv = invulnBonus || 0;
@@ -49,12 +88,27 @@ function singleAttackDmgDist(atkStr, toHit, defStr, toBlock, hp, invulnBonus) {
   }
 
   const dist = new Array(atkStr + 1).fill(0);
-  for (let h = 0; h <= atkStr; h++) {
-    if (hitsPMF[h] < 1e-15) continue;
-    const sub = chainDmg[h];
-    for (let d = 0; d < sub.length; d++) {
-      if (sub[d] < 1e-15) continue;
-      dist[d] += hitsPMF[h] * sub[d];
+  if (!blurChance) {
+    for (let h = 0; h <= atkStr; h++) {
+      if (hitsPMF[h] < 1e-15) continue;
+      const sub = chainDmg[h];
+      for (let d = 0; d < sub.length; d++) {
+        if (sub[d] < 1e-15) continue;
+        dist[d] += hitsPMF[h] * sub[d];
+      }
+    }
+  } else {
+    for (let h = 0; h <= atkStr; h++) {
+      if (hitsPMF[h] < 1e-15) continue;
+      const bFilter = blurSurvivingDist(h, blurChance, blurBuggy);
+      for (let s = 0; s < bFilter.length; s++) {
+        if (bFilter[s] < 1e-15) continue;
+        const sub = chainDmg[s];
+        for (let d = 0; d < sub.length; d++) {
+          if (sub[d] < 1e-15) continue;
+          dist[d] += hitsPMF[h] * bFilter[s] * sub[d];
+        }
+      }
     }
   }
   return dist;
@@ -75,8 +129,9 @@ function convolveDists(a, b, cap) {
 
 // Compute total damage distribution for `atkFigs` figures each attacking with
 // `atkStr` strength. Uses exponentiation-by-squaring for efficiency.
-function calcTotalDamageDist(atkFigs, atkStr, toHit, defStr, toBlock, hp, cap, invulnBonus) {
-  const single = singleAttackDmgDist(atkStr, toHit, defStr, toBlock, hp, invulnBonus);
+// blurChance/blurBuggy: Blur pre-defense hit negation passed to singleAttackDmgDist.
+function calcTotalDamageDist(atkFigs, atkStr, toHit, defStr, toBlock, hp, cap, invulnBonus, blurChance, blurBuggy) {
+  const single = singleAttackDmgDist(atkStr, toHit, defStr, toBlock, hp, invulnBonus, blurChance, blurBuggy);
 
   let result = [1];
   let base = single;

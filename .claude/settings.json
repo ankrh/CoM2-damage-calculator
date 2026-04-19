@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_close",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_snapshot",
+      "Bash(curl -s -o /dev/null -w * http://localhost:8080*)",
+      "Bash(node -c *)",
+      "Bash(python nocache_server.py*)",
+      "mcp__playwright__browser_evaluate"
+    ]
+  }
+}

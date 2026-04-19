@@ -89,7 +89,8 @@ function parseAbilitiesFromUnit(unit) {
   const normalized = abilities.map(a => a.replace(/ /g, ''));
   for (const abil of ABILITY_DEFS) {
     if (abil.type === 'bool') {
-      result[abil.key] = normalized.some(a => a === abil.match || a.startsWith(abil.match + '='));
+      result[abil.key] = normalized.some(a => a === abil.match || a.startsWith(abil.match + '='))
+        || abilities.some(a => a.startsWith(abil.match + ' ') && !a.includes('='));
     } else if (abil.type === 'numcheck') {
       const found = normalized.find(a => a.startsWith(abil.match + '='));
       if (found) {
@@ -154,6 +155,7 @@ function clearAbilities(prefix) {
 
 const unitDatabases = {};
 const unitBaseStats = {};
+let _activeVersion = null;
 
 function loadUnitDatabase(version) {
   if (unitDatabases[version]) return unitDatabases[version];
@@ -170,12 +172,19 @@ function populateUnitDropdown(selectId, units) {
   while (sel.children.length > 1) sel.removeChild(sel.children[1]);
   if (units.length === 0) return;
 
+  const CAT_NORMALIZE = {
+    'General': 'Generic', 'Dwarf': 'Dwarven',
+    'Life Creatures': 'Life', 'Death Creatures': 'Death', 'Chaos Creatures': 'Chaos',
+    'Nature Creatures': 'Nature', 'Sorcery Creatures': 'Sorcery', 'Arcane Creatures': 'Arcane',
+  };
+
   const groups = {};
   for (const u of units) {
     if (u.abilities && u.abilities.includes('CreateOutpost')) continue;
     if (u.name === 'Floating Island') continue;
-    const cat = u.category;
-    if (cat === 'Heroes') continue;
+    const rawCat = u.category;
+    if (rawCat === 'Heroes') continue;
+    const cat = CAT_NORMALIZE[rawCat] || rawCat;
     if (!groups[cat]) groups[cat] = [];
     groups[cat].push(u);
   }
@@ -335,6 +344,9 @@ function readUnitStats(prefix) {
   const fbAtkBonus = abilities.flameBlade ? 2 : (abilities.metalFires ? 1 : 0);
   const fbRtbMod = fbAtkBonus > 0 && (rangedType === 'missile' || thrownType === 'thrown') ? fbAtkBonus : 0;
 
+  // Giant Strength: +1 thrown only (not missile/boulder/magic ranged, not breath).
+  const gsRtbMod = (abilities.giantStrength && thrownType === 'thrown') ? 1 : 0;
+
   // Holy Weapon: +10% To Hit on melee, missile, and boulder attacks. Also applies to thrown
   // in all versions except MoM 1.31 (bug). Does NOT affect magic ranged, fire/lightning
   // breath, or gaze attacks. Also upgrades normal weapon to magic (bypasses Weapon Immunity).
@@ -346,8 +358,10 @@ function readUnitStats(prefix) {
     else if (thrownType === 'thrown' && version !== 'mom_1.31') hwRtbToHit = 10;
   }
   const weaponUpgradedByHW = hwActive && weapon === 'normal';
+  const eldritchActive = !!(abilities && abilities.eldritchWeapon);
   const effectiveWeapon = (fbAtkBonus > 0 && weapon === 'normal') ? 'magic'
-    : (weaponUpgradedByHW ? 'magic' : weapon);
+    : (weaponUpgradedByHW ? 'magic'
+    : ((eldritchActive && weapon === 'normal') ? 'magic' : weapon));
 
   // Ranged/Thrown/Breath strength
   let rtbLvl = 0, rtbWpn = 0;
@@ -358,7 +372,7 @@ function readUnitStats(prefix) {
     rtbLvl = lvl.thrown;
     rtbWpn = (baseRtb > 0 && thrownGetsWpn) ? wpn.atk : 0;
   }
-  const rtb = baseRtb > 0 ? Math.max(0, baseRtb + rtbLvl + rtbWpn + abilMods.rtbMod + fbRtbMod + lionheartRtbMod + nodeBonus + darkLightBonus) : 0;
+  const rtb = baseRtb > 0 ? Math.max(0, baseRtb + rtbLvl + rtbWpn + abilMods.rtbMod + fbRtbMod + gsRtbMod + lionheartRtbMod + nodeBonus + darkLightBonus) : 0;
 
   // Hidden gaze ranged attack: affected by same modifiers as ranged (level, node aura,
   // darkness/light, ability mods) but NOT weapon bonuses. In v1.31, if reduced to 0 the
@@ -390,20 +404,36 @@ function readUnitStats(prefix) {
   }
 
   // Pre-clamped To Hit/Block values for combat (decimals 0.1-1.0)
-  const toHitMelee = clampPct(30, baseToHitMod + meleeToHitBonus);
-  const toHitRtb = clampPct(30, baseToHitRtbMod + lvl.toHit + rtbToHitWpn + rtbDistPenalty + abilMods.toHitMod + hwRtbToHit);
+  let toHitMelee = clampPct(30, baseToHitMod + meleeToHitBonus);
+  let toHitRtb = clampPct(30, baseToHitRtbMod + lvl.toHit + rtbToHitWpn + rtbDistPenalty + abilMods.toHitMod + hwRtbToHit);
   const toBlock = clampPct(30, baseToBlkMod + abilMods.toBlkMod);
   // Immolation To Hit: always base 30%, ignoring all modifiers (it's a spell attack)
-  const toHitImmolation = 0.3;
+  let toHitImmolation = 0.3;
+
+  // Warp Reality: -20% To Hit for non-Chaos units. Chaos Channels exempts a unit.
+  // Read from global checkbox here so the penalty is reflected in the red display numbers.
+  const warpRealityActive = document.getElementById('warpReality') && document.getElementById('warpReality').checked;
+  const unitIsChaos = unitTypeVal === 'fantastic_chaos';  // Chaos Channels already folds into unitTypeVal
+  if (warpRealityActive && !unitIsChaos) {
+    toHitMelee      = Math.max(0.1, toHitMelee - 0.2);
+    toHitRtb        = Math.max(0.1, toHitRtb - 0.2);
+    toHitImmolation = Math.max(0.1, toHitImmolation - 0.2);
+  }
+
+  // Berserk: doubles melee attack (applied last, after all other bonuses), sets defense
+  // to 0 absolutely (no other bonus can raise it while Berserk is active).
+  const berserkActive = !!(abilities && abilities.berserk);
+  const finalAtk = berserkActive ? atk * 2 : atk;
+  const finalDef = berserkActive ? 0 : def;
 
   return {
     // Base values (for display)
     baseAtk, baseRtb, baseDef, baseRes, baseHP,
     baseToHitMod, baseToHitRtbMod, baseToBlkMod,
     // Bonus breakdown (for display)
-    atkBonus: baseAtk > 0 ? lvl.atk + wpn.atk + abilMods.atkMod + nodeBonus + darkLightBonus : 0,
+    atkBonus: baseAtk > 0 ? finalAtk - baseAtk : 0,
     rtbBonus: baseRtb > 0 ? rtbLvl + rtbWpn + abilMods.rtbMod + fbRtbMod + lionheartRtbMod + nodeBonus + darkLightBonus : 0,
-    defBonus: lvl.def + wpn.def + cityWallBonus + abilMods.defMod + nodeBonus + darkLightBonus,
+    defBonus: finalDef - baseDef,
     resBonus: lvl.res + abilMods.resMod + nodeBonus + darkLightBonus,
     hpBonus: lvl.hp + abilMods.hpMod + lionheartHpMod + charmOfLifeHpMod,
     meleeToHitBonus,
@@ -412,7 +442,7 @@ function readUnitStats(prefix) {
     rtbDistPenalty,
     // Effective values (for calculation)
     figs: baseFigs,
-    atk, def, res, hp, rtb, effectiveGazeRanged, effectiveDoomGaze, weapon: effectiveWeapon, unitType: unitTypeVal,
+    atk: finalAtk, def: finalDef, res, hp, rtb, effectiveGazeRanged, effectiveDoomGaze, weapon: effectiveWeapon, unitType: unitTypeVal,
     dmg: Math.max(0, parseInt(document.getElementById(prefix + 'Dmg').value) || 0),
     rangedType, thrownType,
     rangedGetsWpn, thrownGetsWpn,
@@ -521,7 +551,9 @@ function applyUnit(prefix, unitIndex) {
       unitTypeSel.value = 'hero';
     } else if (isFantastic) {
       const realmMap = { 'Nature': 'nature', 'Sorcery': 'sorcery', 'Chaos': 'chaos',
-                         'Life': 'life', 'Death': 'death', 'Arcane': 'arcane' };
+                         'Life': 'life', 'Death': 'death', 'Arcane': 'arcane',
+                         'Nature Creatures': 'nature', 'Sorcery Creatures': 'sorcery', 'Chaos Creatures': 'chaos',
+                         'Life Creatures': 'life', 'Death Creatures': 'death', 'Arcane Creatures': 'arcane' };
       const realm = realmMap[cat] || 'arcane';
       unitTypeSel.value = 'fantastic_' + realm;
     } else {
@@ -636,24 +668,15 @@ function swapAttackerDefender() {
 
 // --- Version Change ---
 
-function getUnitHeroArchetype(name) {
-  const m = (name || '').match(/^(.+?)\s*\(.*\)$/);
-  return m ? m[1].trim() : null;
-}
-
 function findMatchingUnit(units, oldUnit) {
   if (!oldUnit) return null;
+  const nonHeroes = units.filter(u => u.category !== 'Heroes');
   const oldName = oldUnit.name;
-  let match = units.find(u => u.name === oldName);
+  let match = nonHeroes.find(u => u.name === oldName);
   if (match) return match;
   const aliased = UNIT_NAME_ALIASES[oldName];
   if (aliased) {
-    match = units.find(u => u.name === aliased);
-    if (match) return match;
-  }
-  const arch = getUnitHeroArchetype(oldName);
-  if (arch) {
-    match = units.find(u => getUnitHeroArchetype(u.name) === arch);
+    match = nonHeroes.find(u => u.name === aliased);
     if (match) return match;
   }
   return null;
@@ -665,8 +688,9 @@ function onVersionChange() {
   const bUnitSel = document.getElementById('bUnit');
   const oldAId = aUnitSel.value;
   const oldBId = bUnitSel.value;
-  const oldAUnit = oldAId !== 'custom' ? (Object.values(unitDatabases).flat().find(u => String(u.id) === oldAId) || null) : null;
-  const oldBUnit = oldBId !== 'custom' ? (Object.values(unitDatabases).flat().find(u => String(u.id) === oldBId) || null) : null;
+  const prevDb = (_activeVersion && unitDatabases[_activeVersion]) || [];
+  const oldAUnit = oldAId !== 'custom' ? (prevDb.find(u => String(u.id) === oldAId) || null) : null;
+  const oldBUnit = oldBId !== 'custom' ? (prevDb.find(u => String(u.id) === oldBId) || null) : null;
 
   const units = loadUnitDatabase(version);
   populateUnitDropdown('aUnit', units);
@@ -674,13 +698,11 @@ function onVersionChange() {
 
   for (const [prefix, oldUnit, sel] of [['a', oldAUnit, aUnitSel], ['b', oldBUnit, bUnitSel]]) {
     if (!oldUnit) continue;
-    if (sel.value !== 'custom') continue;
     const matched = findMatchingUnit(units, oldUnit);
-    if (matched) {
-      sel.value = String(matched.id);
-    }
+    sel.value = matched ? String(matched.id) : 'custom';
   }
 
+  _activeVersion = version;
   updateUnitLock('a');
   updateUnitLock('b');
   updateTypeVisibility();
@@ -719,9 +741,12 @@ function renderDistPanel(container, title, dist, hp, numFigs, opts) {
     }
   }
 
-  // Compute destruction chance (damage >= total remaining HP)
+  // Compute destruction chance (damage >= total remaining HP).
+  // opts.pDestroy overrides with a pre-computed cumulative value (used by phase panels).
   let destroyPct = '';
-  if (numFigs > 0 && hp > 0) {
+  if (opts && opts.pDestroy != null) {
+    destroyPct = ` &mdash; ${formatPct(opts.pDestroy)} destroyed`;
+  } else if (numFigs > 0 && hp > 0) {
     const totalRemHP = firstFigRem + (numFigs - 1) * hp;
     let pDestroy = 0;
     for (let d = totalRemHP; d < dist.length; d++) pDestroy += dist[d] || 0;
@@ -759,7 +784,7 @@ function renderDistPanel(container, title, dist, hp, numFigs, opts) {
 function renderBreakdownGrid(phases) {
   const section = document.getElementById('breakdownSection');
   const grid = document.getElementById('breakdownGrid');
-  if (!phases || phases.length === 0) {
+  if (!phases || phases.length <= 1) {
     section.style.display = 'none';
     grid.innerHTML = '';
     return;
@@ -782,8 +807,10 @@ function renderBreakdownGrid(phases) {
       renderDistPanel(panels[idx], 'Attacker figs feared', phase.atkDist, 0, 0, fearOpts);
       renderDistPanel(panels[idx + 1], 'Defender figs feared', phase.defDist, 0, 0, fearOpts);
     } else {
-      renderDistPanel(panels[idx], 'Mean damage to attacker', phase.atkDist, phase.atkHPper, phase.atkFigs, breakdownOpts);
-      renderDistPanel(panels[idx + 1], 'Mean damage to defender', phase.defDist, phase.defHPper, phase.defFigs, breakdownOpts);
+      const atkOpts = phase.atkDestroyPct != null ? { ...breakdownOpts, pDestroy: phase.atkDestroyPct } : breakdownOpts;
+      const defOpts = phase.defDestroyPct != null ? { ...breakdownOpts, pDestroy: phase.defDestroyPct } : breakdownOpts;
+      renderDistPanel(panels[idx], 'Mean damage to attacker', phase.atkDist, phase.atkHPper, phase.atkFigs, atkOpts);
+      renderDistPanel(panels[idx + 1], 'Mean damage to defender', phase.defDist, phase.defHPper, phase.defFigs, defOpts);
     }
     idx += 2;
   }
@@ -837,9 +864,8 @@ function recalculate() {
   const isRanged = document.getElementById('rangedCheck').checked && a.rangedType !== 'none' && a.rtb > 0;
   const version = document.getElementById('gameVersion').value;
   const wallOfFire = document.getElementById('wallOfFire').checked;
-  const warpReality = document.getElementById('warpReality').checked;
 
-  const result = resolveCombat(a, b, { isRanged, version, wallOfFire, warpReality });
+  const result = resolveCombat(a, b, { isRanged, version, wallOfFire });
 
   const aFirstFigRem = a.hp > 0 && a.dmg % a.hp !== 0 ? a.hp - (a.dmg % a.hp) : a.hp;
   const bFirstFigRem = b.hp > 0 && b.dmg % b.hp !== 0 ? b.hp - (b.dmg % b.hp) : b.hp;
@@ -864,34 +890,65 @@ function updateTypeVisibility() {
     if (input) input.classList.toggle('disabled-field', sel.value === 'none');
   });
 
-  // Metal Fires / Flame Blade and Chaos Channels only affect Normal units and Heroes.
+  // Version and unit type restrictions on enchantments.
+  const version = document.getElementById('gameVersion').value;
+  const isMoM = version === 'mom_1.31' || version === 'mom_cp_1.60.00';
+  const isCoMorCoM2 = version === 'com_6.08' || version === 'com2_1.05.11';
+  const isCoM2 = version === 'com2_1.05.11';
+
+  function subgroupAllowed(subgroup) {
+    const sg = (subgroup || '').replace(/^_/, '');
+    if (sg === 'MoM only') return isMoM;
+    if (sg === 'CoM & CoM2') return isCoMorCoM2;
+    if (sg === 'CoM2 only') return isCoM2;
+    return true;
+  }
+
+  const abilByKey = Object.fromEntries(ABILITY_DEFS.map(a => [a.key, a]));
+
+  function applyDisabled(el, disabled) {
+    if (disabled) {
+      if (el.tagName === 'SELECT') el.value = el.options[0].value;
+      else if (el.type === 'checkbox') el.checked = false;
+    }
+    el.disabled = disabled;
+  }
+
   for (const prefix of ['a', 'b']) {
     const unitTypeSel = document.getElementById(prefix + 'Abil_unitType');
-    const isFantastic = unitTypeSel && unitTypeSel.value.startsWith('fantastic_');
-    const fbSel = document.getElementById(prefix + 'Abil_flameBlade');
-    if (fbSel) {
-      if (isFantastic) fbSel.checked = false;
-      fbSel.disabled = isFantastic;
+    const unitType = unitTypeSel ? unitTypeSel.value : 'normal';
+    const isFantastic = unitType.startsWith('fantastic_');
+    const isNormal = unitType === 'normal';
+
+    // Version-only pass: set all Enchantments items based on version.
+    for (const abil of ABILITY_DEFS) {
+      if (abil.group !== 'Enchantments') continue;
+      const el = document.getElementById(prefix + 'Abil_' + abil.key);
+      if (!el) continue;
+      applyDisabled(el, !subgroupAllowed(abil.subgroup));
     }
-    const mfSel = document.getElementById(prefix + 'Abil_metalFires');
-    if (mfSel) {
-      if (isFantastic) mfSel.checked = false;
-      mfSel.disabled = isFantastic;
+
+    // Unit-type passes override with combined (unit-type || version) condition.
+
+    // Normal or Hero only (disabled for fantastic units).
+    for (const key of ['flameBlade', 'metalFires', 'chaosChannels', 'blackChannels', 'holyArmor', 'holyWeapon', 'eldritchWeapon', 'shatter', 'mislead']) {
+      const el = document.getElementById(prefix + 'Abil_' + key);
+      if (!el) continue;
+      applyDisabled(el, isFantastic || !subgroupAllowed(abilByKey[key]?.subgroup));
     }
-    const ccSel = document.getElementById(prefix + 'Abil_chaosChannels');
-    if (ccSel) {
-      if (isFantastic) ccSel.value = 'none';
-      ccSel.disabled = isFantastic;
+
+    // Fantastic only (disabled for normal and hero units).
+    for (const key of ['survivalInstinct']) {
+      const el = document.getElementById(prefix + 'Abil_' + key);
+      if (!el) continue;
+      applyDisabled(el, !isFantastic || !subgroupAllowed(abilByKey[key]?.subgroup));
     }
-    const haSel = document.getElementById(prefix + 'Abil_holyArmor');
-    if (haSel) {
-      if (isFantastic) haSel.checked = false;
-      haSel.disabled = isFantastic;
-    }
-    const hwSel = document.getElementById(prefix + 'Abil_holyWeapon');
-    if (hwSel) {
-      if (isFantastic) hwSel.checked = false;
-      hwSel.disabled = isFantastic;
+
+    // Normal only (disabled for fantastic units AND heroes).
+    for (const key of ['discipline', 'destiny']) {
+      const el = document.getElementById(prefix + 'Abil_' + key);
+      if (!el) continue;
+      applyDisabled(el, !isNormal || !subgroupAllowed(abilByKey[key]?.subgroup));
     }
   }
 

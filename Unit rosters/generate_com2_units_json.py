@@ -313,11 +313,6 @@ def main():
                if u.get('CreateOutpost', '').lower() != 'yes'
                and u.get('Name') not in SPECIAL_UNIT_NAMES]
 
-    # Hardcoded ability fixes for data missing from the INI
-    for r in records:
-        if r.get('name') == 'Night Stalker' and r['category'] == 'Death Creatures':
-            r.setdefault('abilities', []).append('GazeRanged=1')
-
     # Force race prefix for non-hero units that share a name with another race's unit
     from collections import Counter
     name_counts = Counter(r['name'] for r in records if r['category'] != 'Heroes')

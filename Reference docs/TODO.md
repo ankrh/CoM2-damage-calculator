@@ -10,10 +10,6 @@
 
 - Do units still have hidden gaze attack in CoM1/2?
 
-- **What is Doom Bat "Doom"** It does not seem to be the same as Doom gaze.
-
-- **What is lightning resistance** (Sky drake, Storm giant)
-
 - Test darkness effect on gaze attacks
 
 - Test poison + gaze
@@ -27,3 +23,8 @@
 - Implement CoM defender roll logic
 
 - Add black sleep
+
+- Warp reality wiki says to hit can be reduced to 0%, but the to hit wiki page says we can't go below 10%
+
+- Does the chaos spawn poison touch trigger on doom gaze, melee attack or on both?
+
