@@ -11,6 +11,19 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+function describeError(err) {
+  if (!err) return 'Unknown error';
+  if (err instanceof Error) return err.stack || err.message || String(err);
+  if (typeof err === 'string') return err;
+  try {
+    const json = JSON.stringify(err);
+    if (json && json !== '{}') return json;
+  } catch (_) {
+    // Fall through.
+  }
+  return String(err);
+}
+
 function sendFile(res, filePath) {
   fs.readFile(filePath, (err, data) => {
     if (err) {
@@ -70,20 +83,34 @@ function getFreePort() {
 
 function launchChrome(targetUrl, debugPort, userDataDir) {
   fs.mkdirSync(userDataDir, { recursive: true });
+  const stderr = [];
   const child = spawn(chromePath, [
     '--headless=new',
     '--disable-gpu',
     '--no-first-run',
+    '--remote-debugging-address=127.0.0.1',
     `--user-data-dir=${userDataDir}`,
     `--remote-debugging-port=${debugPort}`,
     targetUrl,
-  ], { stdio: 'ignore' });
+  ], { stdio: ['ignore', 'ignore', 'pipe'] });
+
+  child.stderr.on('data', chunk => {
+    stderr.push(chunk.toString());
+  });
+
+  child.stderrLog = stderr;
   return child;
 }
 
-async function waitForTarget(targetUrl, debugPort, timeoutMs = 15000) {
+async function waitForTarget(targetUrl, debugPort, chrome, timeoutMs = 15000) {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
+    if (chrome.exitCode != null) {
+      const stderrText = (chrome.stderrLog || []).join('').trim();
+      const details = stderrText ? `\nChrome stderr:\n${stderrText}` : '';
+      throw new Error(`Chrome exited before exposing a debugger target (exit code ${chrome.exitCode}).${details}`);
+    }
+
     try {
       const res = await fetch(`http://127.0.0.1:${debugPort}/json`);
       const pages = await res.json();
@@ -97,17 +124,30 @@ async function waitForTarget(targetUrl, debugPort, timeoutMs = 15000) {
     }
     await sleep(250);
   }
-  throw new Error('Timed out waiting for Chrome debugger target');
+  const stderrText = chrome && chrome.stderrLog ? chrome.stderrLog.join('').trim() : '';
+  const details = stderrText ? `\nChrome stderr:\n${stderrText}` : '';
+  throw new Error(`Timed out waiting for Chrome debugger target on port ${debugPort}.${details}`);
 }
 
 async function cdpEvaluate(wsUrl, expression) {
   return new Promise((resolve, reject) => {
     const ws = new WebSocket(wsUrl);
     let nextId = 1;
+    let settled = false;
+    let lastPageException = null;
     const timer = setTimeout(() => {
+      settled = true;
       ws.close();
       reject(new Error('Timed out waiting for CDP result'));
     }, 10000);
+
+    function fail(err) {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      try { ws.close(); } catch (_) {}
+      reject(err instanceof Error ? err : new Error(describeError(err)));
+    }
 
     function send(method, params = {}) {
       ws.send(JSON.stringify({ id: nextId++, method, params }));
@@ -117,7 +157,12 @@ async function cdpEvaluate(wsUrl, expression) {
       send('Runtime.enable');
       setTimeout(() => {
         send('Runtime.evaluate', {
-          expression,
+          expression: `(() => {
+            if (document.readyState === 'complete') return Promise.resolve();
+            return new Promise(resolve =>
+              window.addEventListener('load', () => resolve(), { once: true })
+            );
+          })().then(() => (${expression}))`,
           awaitPromise: true,
           returnByValue: true,
         });
@@ -126,7 +171,14 @@ async function cdpEvaluate(wsUrl, expression) {
 
     ws.addEventListener('message', event => {
       const msg = JSON.parse(event.data);
+      if (msg.method === 'Runtime.exceptionThrown') {
+        lastPageException = msg.params?.exceptionDetails?.exception?.description
+          || msg.params?.exceptionDetails?.text
+          || JSON.stringify(msg.params?.exceptionDetails || {});
+        return;
+      }
       if (msg.id !== 2) return;
+      settled = true;
       clearTimeout(timer);
       ws.close();
       if (msg.result && msg.result.exceptionDetails) {
@@ -139,8 +191,15 @@ async function cdpEvaluate(wsUrl, expression) {
     });
 
     ws.addEventListener('error', err => {
-      clearTimeout(timer);
-      reject(err);
+      const pageSuffix = lastPageException ? `\nLast page exception: ${lastPageException}` : '';
+      fail(new Error(`WebSocket error: ${describeError(err)}${pageSuffix}`));
+    });
+
+    ws.addEventListener('close', event => {
+      if (settled) return;
+      const reason = event.reason ? `, reason: ${event.reason}` : '';
+      const pageSuffix = lastPageException ? `\nLast page exception: ${lastPageException}` : '';
+      fail(new Error(`WebSocket closed before CDP result (code ${event.code}${reason})${pageSuffix}`));
     });
   });
 }
@@ -155,7 +214,7 @@ async function main() {
   const chrome = launchChrome(targetUrl, debugPort, userDataDir);
 
   try {
-    const wsUrl = await waitForTarget(targetUrl, debugPort);
+    const wsUrl = await waitForTarget(targetUrl, debugPort, chrome);
     const expressions = {
       'cancelled-tohit': `(() => {
         document.getElementById('gameVersion').value = 'mom_1.31';

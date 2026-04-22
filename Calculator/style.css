@@ -500,6 +500,9 @@ h1 {
 .abilities-content {
   padding-top: 0.5rem;
 }
+.abilities-section.abilities-empty .abilities-content {
+  display: none;
+}
 /* Hidden ability items, group headers, and grid containers */
 .abil-item.abil-hidden,
 .abil-group-header.abil-hidden,

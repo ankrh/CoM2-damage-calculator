@@ -193,4 +193,3 @@ This table documents which unit types (Normal, Fantastic, Hero) can be affected 
    - Heroes = Special single-unit commanders
    - In MoM, "fantastic creatures and heroes may not be possessed" (per Possession spell documentation)
    - MoM's "normal unit only" spells appear intentionally designed to exclude summoned creatures
-

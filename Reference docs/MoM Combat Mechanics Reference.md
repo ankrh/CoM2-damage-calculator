@@ -180,6 +180,30 @@ These bypass Attack Roll and Defense entirely. Instead, the target makes a **Res
 
 ---
 
+### 6f. Effective Unit Type / Realm Precedence
+
+In CoM/CoM2, some combat effects rewrite a unit's effective realm-alignment or creature type during combat. When multiple such effects apply at once, the combat recalculation order determines the final stored type; the **last applicable effect wins**.
+
+Reported order:
+
+1. Chaos Channels: Fire Breath
+2. Destiny
+3. Chaos Channels: Flight
+4. Chaos Channels: Demon Skin / Armor
+5. Blood Lust
+6. Chosen One turning the unit to Life in combat
+7. Animate Dead
+8. Undead
+9. Mystic Surge or Raise Dead "no healing" flag turning the unit into fantastic with **no realm**
+
+Practical takeaway:
+
+- If `Mystic Surge` and Chaos/Death-conversion effects are all present, the final combat type is the Mystic Surge / Raise Dead no-realm fantastic state, not Chaos or Death.
+- This matters for realm-sensitive combat interactions such as node aura eligibility, Warp Reality exemptions, Dispel Evil targeting class, and similar checks.
+- There is one known exception in game logic: some spell-targeting/synergy checks intentionally treat **Chaos Channeled Undead** as both Chaos and Death, even if the strict stored unit data would otherwise end up Death before any later no-realm override.
+
+---
+
 ## 7. Melee Combat Sequence
 
 When unit A initiates a Melee Attack on unit B, the full sequence is:

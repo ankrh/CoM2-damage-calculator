@@ -8,8 +8,6 @@
 
 - **UNITS.INI validity** The data on settlers in the UNITS.INI file has no lucky settlers, but they exist in game in CoM2. Are we sure that the UNITS.INI from the CoM2 folder actually describes CoM2 units?
 
-- When did Large shield change
-
 - Change default test cases to be based on CoM2
 
 - Warp reality wiki says to hit can be reduced to 0%, but the to hit wiki page says we can't go below 10%
@@ -17,3 +15,11 @@
 - Does the chaos spawn poison touch trigger on doom gaze, melee attack or on both?
 
 - Weird defense behavior on page 25
+
+- CoM high prayer description says +3 attack but MoM and CoM2 have +2 attack, and CoM manual says "didn't change it"... Assuming it's +2 in all versions.
+
+- Poison save difference
+
+- Double check life drain modifier
+
+- Endurance
