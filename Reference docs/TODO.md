@@ -18,8 +18,13 @@
 
 - CoM high prayer description says +3 attack but MoM and CoM2 have +2 attack, and CoM manual says "didn't change it"... Assuming it's +2 in all versions.
 
-- Poison save difference
+- Manuals say that wraiths have life steal -4 but it seems to be -3
 
-- Double check life drain modifier
+- With blazing eyes, can a unit have doom gaze at the same time as ranged attacks?
 
-- Endurance
+mojibake
+
+does destiny remove the buff from magical/mithril/adamantium weapons?
+
+orihalcon
+

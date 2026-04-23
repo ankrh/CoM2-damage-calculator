@@ -55,6 +55,16 @@ function blurSurvivingDist(h, blurChance, buggy) {
   return survivingDist;
 }
 
+function remapDistByMinDamage(dist, minDamage) {
+  if (!minDamage) return dist;
+  const remapped = new Array(dist.length).fill(0);
+  for (let d = 0; d < dist.length; d++) {
+    if (dist[d] < 1e-15) continue;
+    remapped[Math.min(Math.max(d, minDamage), dist.length - 1)] += dist[d];
+  }
+  return remapped;
+}
+
 // Compute damage distribution for a single figure's attack against a multi-figure target.
 // Returns an array where dist[d] = probability of dealing exactly d damage.
 // Handles overflow: when a hit kills a figure (damage >= hp), excess hits roll
@@ -65,7 +75,9 @@ function blurSurvivingDist(h, blurChance, buggy) {
 // topFigHP: CoM2 only — remaining HP of the wounded top figure. When set and < hp,
 // the rollover triggers at topFigHP instead of hp for the first figure only;
 // subsequent overflow figures still use full hp.
-function singleAttackDmgDist(atkStr, toHit, defStr, toBlock, hp, invulnBonus, blurChance, blurBuggy, topFigHP) {
+// minDamageFromHits: optional callback that maps the pre-defense hit count to a minimum
+// total damage floor for this single attack (used by Supernatural).
+function singleAttackDmgDist(atkStr, toHit, defStr, toBlock, hp, invulnBonus, blurChance, blurBuggy, topFigHP, minDamageFromHits) {
   const hitsPMF = binomialPMF(atkStr, toHit);
   const blocksPMF = binomialPMF(defStr, toBlock);
   const inv = invulnBonus || 0;
@@ -118,7 +130,7 @@ function singleAttackDmgDist(atkStr, toHit, defStr, toBlock, hp, invulnBonus, bl
   if (!blurChance) {
     for (let h = 0; h <= atkStr; h++) {
       if (hitsPMF[h] < 1e-15) continue;
-      const sub = topDmg[h];
+      const sub = remapDistByMinDamage(topDmg[h], minDamageFromHits ? minDamageFromHits(h) : 0);
       for (let d = 0; d < sub.length; d++) {
         if (sub[d] < 1e-15) continue;
         dist[d] += hitsPMF[h] * sub[d];
@@ -128,9 +140,10 @@ function singleAttackDmgDist(atkStr, toHit, defStr, toBlock, hp, invulnBonus, bl
     for (let h = 0; h <= atkStr; h++) {
       if (hitsPMF[h] < 1e-15) continue;
       const bFilter = blurSurvivingDist(h, blurChance, blurBuggy);
+      const minDamage = minDamageFromHits ? minDamageFromHits(h) : 0;
       for (let s = 0; s < bFilter.length; s++) {
         if (bFilter[s] < 1e-15) continue;
-        const sub = topDmg[s];
+        const sub = remapDistByMinDamage(topDmg[s], minDamage);
         for (let d = 0; d < sub.length; d++) {
           if (sub[d] < 1e-15) continue;
           dist[d] += hitsPMF[h] * bFilter[s] * sub[d];
@@ -158,8 +171,9 @@ function convolveDists(a, b, cap) {
 // `atkStr` strength. Uses exponentiation-by-squaring for efficiency.
 // blurChance/blurBuggy: Blur pre-defense hit negation passed to singleAttackDmgDist.
 // topFigHP: CoM2 wounded-top-figure rollover threshold (see singleAttackDmgDist).
-function calcTotalDamageDist(atkFigs, atkStr, toHit, defStr, toBlock, hp, cap, invulnBonus, blurChance, blurBuggy, topFigHP) {
-  const single = singleAttackDmgDist(atkStr, toHit, defStr, toBlock, hp, invulnBonus, blurChance, blurBuggy, topFigHP);
+// minDamageFromHits: optional callback passed through to singleAttackDmgDist.
+function calcTotalDamageDist(atkFigs, atkStr, toHit, defStr, toBlock, hp, cap, invulnBonus, blurChance, blurBuggy, topFigHP, minDamageFromHits) {
+  const single = singleAttackDmgDist(atkStr, toHit, defStr, toBlock, hp, invulnBonus, blurChance, blurBuggy, topFigHP, minDamageFromHits);
 
   let result = [1];
   let base = single;
@@ -175,7 +189,9 @@ function calcTotalDamageDist(atkFigs, atkStr, toHit, defStr, toBlock, hp, cap, i
 // Per-figure damage distribution for area damage (no overflow between figures).
 // Each target figure independently takes min(hp, max(0, hits - blocks)) damage.
 // Unlike singleAttackDmgDist, excess damage beyond hp is lost (not carried to the next figure).
-function areaPerFigureDmgDist(atkStr, toHit, defStr, toBlock, hp, invulnBonus) {
+// minDamageFromHits: optional callback that maps the pre-defense hit count to a minimum
+// per-target damage floor (still capped by hp).
+function areaPerFigureDmgDist(atkStr, toHit, defStr, toBlock, hp, invulnBonus, minDamageFromHits) {
   const hitsPMF = binomialPMF(atkStr, toHit);
   const blocksPMF = binomialPMF(defStr, toBlock);
   const inv = invulnBonus || 0;
@@ -183,9 +199,10 @@ function areaPerFigureDmgDist(atkStr, toHit, defStr, toBlock, hp, invulnBonus) {
   const dist = new Array(maxDmg + 1).fill(0);
   for (let h = 0; h <= atkStr; h++) {
     if (hitsPMF[h] < 1e-15) continue;
+    const minDamage = minDamageFromHits ? minDamageFromHits(h) : 0;
     for (let b = 0; b <= defStr; b++) {
       if (blocksPMF[b] < 1e-15) continue;
-      dist[Math.min(hp, Math.max(0, h - b - inv))] += hitsPMF[h] * blocksPMF[b];
+      dist[Math.min(hp, Math.max(Math.max(0, h - b - inv), minDamage))] += hitsPMF[h] * blocksPMF[b];
     }
   }
   return dist;
@@ -194,9 +211,9 @@ function areaPerFigureDmgDist(atkStr, toHit, defStr, toBlock, hp, invulnBonus) {
 // Compute area damage distribution: each of `targetFigs` figures independently
 // takes damage from an attack of strength `atkStr`. No overflow between figures.
 // Used for Immolation, Fireball, and other area-damage effects.
-function calcAreaDamageDist(targetFigs, atkStr, toHit, defStr, toBlock, hp, cap, invulnBonus) {
+function calcAreaDamageDist(targetFigs, atkStr, toHit, defStr, toBlock, hp, cap, invulnBonus, minDamageFromHits) {
   if (targetFigs <= 0 || atkStr <= 0) return [1];
-  const single = areaPerFigureDmgDist(atkStr, toHit, defStr, toBlock, hp, invulnBonus);
+  const single = areaPerFigureDmgDist(atkStr, toHit, defStr, toBlock, hp, invulnBonus, minDamageFromHits);
   let result = [1];
   let base = single;
   let n = targetFigs;

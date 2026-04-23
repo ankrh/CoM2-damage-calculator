@@ -340,8 +340,12 @@ function readUnitStats(prefix) {
   }
 
   const version = document.getElementById('gameVersion').value;
+  // Read abilities from DOM early because Chaos Channels eligibility can depend on gaze attacks.
+  const abilities = readAbilitiesFromDOM(prefix);
+  const destinyActive = destinyActiveForUnit(abilities, version);
   const level = document.getElementById(prefix + 'Level').value;
-  const lvl = getLevelBonuses(level, version);
+  const effectiveLevel = destinyActive ? 'normal' : level;
+  const lvl = getLevelBonuses(effectiveLevel, version);
   const weapon = document.getElementById(prefix + 'Weapon').value;
   const wpn = weaponBonus(weapon);
 
@@ -349,8 +353,9 @@ function readUnitStats(prefix) {
   let rangedType = RANGED_TYPES.includes(rtbTypeRaw) ? rtbTypeRaw : 'none';
   let thrownType = THROWN_TYPES.includes(rtbTypeRaw) ? rtbTypeRaw : 'none';
 
-  // Read abilities from DOM early because Chaos Channels eligibility can depend on gaze attacks.
-  const abilities = readAbilitiesFromDOM(prefix);
+  const unitTypeRaw = document.getElementById(prefix + 'Abil_unitType').value;
+  const unitTypeVal = determineEffectiveUnitType(unitTypeRaw, abilities, version);
+  const baseDoomGazeWithBlazingEyes = blazingEyesDoomGazeForUnit(abilities, unitTypeVal, version);
 
   // Chaos Channels (Fire Breath option): version-sensitive strength.
   // MoM: strength 2.
@@ -363,7 +368,7 @@ function readUnitStats(prefix) {
   const hasGazeAttack = (abilities.gazeRanged || 0) > 0
     || abilities.stoningGaze != null
     || abilities.deathGaze != null
-    || (abilities.doomGaze || 0) > 0;
+    || baseDoomGazeWithBlazingEyes > 0;
   const ccCanOverwriteSpecial = version.startsWith('com2')
     && (thrownType === 'lightning' || hasGazeAttack);
   const ccFireBreathStrength = version.startsWith('com') ? 4 : 2;
@@ -375,12 +380,17 @@ function readUnitStats(prefix) {
 
   // Base values from inputs
   const baseFigs = Math.max(1, parseInt(document.getElementById(prefix + 'Figs').value) || 1);
-  const baseAtk = Math.max(0, parseInt(document.getElementById(prefix + 'Atk').value) || 0);
-  let baseRtb = Math.max(0, parseInt(document.getElementById(prefix + 'Rtb').value) || 0);
-  if (ccFireBreathActive) baseRtb = ccFireBreathStrength;
-  const baseDef = Math.max(0, parseInt(document.getElementById(prefix + 'Def').value) || 0);
-  const baseRes = Math.max(0, parseInt(document.getElementById(prefix + 'Res').value) || 0);
-  const baseHP  = Math.max(1, parseInt(document.getElementById(prefix + 'HP').value) || 1);
+  const inputBaseAtk = Math.max(0, parseInt(document.getElementById(prefix + 'Atk').value) || 0);
+  const inputBaseRtb = Math.max(0, parseInt(document.getElementById(prefix + 'Rtb').value) || 0);
+  const inputBaseDef = Math.max(0, parseInt(document.getElementById(prefix + 'Def').value) || 0);
+  const inputBaseRes = Math.max(0, parseInt(document.getElementById(prefix + 'Res').value) || 0);
+  const inputBaseHP  = Math.max(1, parseInt(document.getElementById(prefix + 'HP').value) || 1);
+  const calcBaseAtk = destinyActive ? inputBaseAtk * 2 : inputBaseAtk;
+  let calcBaseRtb = destinyActive ? inputBaseRtb * 2 : inputBaseRtb;
+  if (ccFireBreathActive) calcBaseRtb = ccFireBreathStrength;
+  const calcBaseDef = destinyActive ? inputBaseDef + 4 : inputBaseDef;
+  const calcBaseRes = destinyActive ? inputBaseRes + 4 : inputBaseRes;
+  const calcBaseHP  = destinyActive ? inputBaseHP * 2 : inputBaseHP;
   const baseToHitMod = parseInt(document.getElementById(prefix + 'ToHitMod').value) || 0;
   const baseToHitRtbMod = parseInt(document.getElementById(prefix + 'ToHitRtbMod').value) || 0;
   const baseToBlkMod = parseInt(document.getElementById(prefix + 'ToBlkMod').value) || 0;
@@ -392,22 +402,22 @@ function readUnitStats(prefix) {
   // the unit gains strength-3 Sorcery magical ranged.
   const isCoM2 = version.startsWith('com2');
   const focusMagicActive = !!(abilities && abilities.focusMagic) && version.startsWith('com');
-  const hasMagicRangedForFocus = baseRtb > 0
+  const hasMagicRangedForFocus = calcBaseRtb > 0
     && (rangedType === 'magic_c' || rangedType === 'magic_n' || rangedType === 'magic_s');
-  const hasBreathForFocus = baseRtb > 0 && (thrownType === 'fire' || thrownType === 'lightning');
-  const hasDoomGazeForFocus = isCoM2 && ((abilities && abilities.doomGaze) || 0) > 0;
+  const hasBreathForFocus = calcBaseRtb > 0 && (thrownType === 'fire' || thrownType === 'lightning');
+  const hasDoomGazeForFocus = isCoM2 && baseDoomGazeWithBlazingEyes > 0;
   const focusMagicBuffsExisting = focusMagicActive
     && (hasMagicRangedForFocus || hasBreathForFocus || hasDoomGazeForFocus);
   if (focusMagicActive && !focusMagicBuffsExisting) {
-    const canConvertThrown = baseRtb > 0 && thrownType === 'thrown';
-    const canConvertRanged = baseRtb > 0
+    const canConvertThrown = calcBaseRtb > 0 && thrownType === 'thrown';
+    const canConvertRanged = calcBaseRtb > 0
       && (isCoM2
         ? rangedType === 'missile'
         : (rangedType === 'missile' || rangedType === 'boulder'));
-    const convertedStrength = (canConvertThrown || canConvertRanged) ? Math.max(baseRtb, 3) : 3;
+    const convertedStrength = (canConvertThrown || canConvertRanged) ? Math.max(calcBaseRtb, 3) : 3;
     rangedType = 'magic_s';
     thrownType = 'none';
-    baseRtb = convertedStrength;
+    calcBaseRtb = convertedStrength;
   }
 
   const rangedGetsWpn = (rangedType === 'missile' || rangedType === 'boulder');
@@ -419,12 +429,16 @@ function readUnitStats(prefix) {
 
   // Node Aura bonus: +2 atk, +2 rtb, +2 def, +2 res for matching Fantastic units.
   // Effective combat type is resolved through the shared precedence helper.
-  const unitTypeRaw = document.getElementById(prefix + 'Abil_unitType').value;
-  const unitTypeVal = determineEffectiveUnitType(unitTypeRaw, abilities, version);
   const supremeLightEligible = supremeLightActiveForUnit(abilities, unitTypeVal, version);
   const survivalInstinctEligible = survivalInstinctActiveForUnit(abilities, unitTypeVal, version);
+  const innerPowerEligible = innerPowerActiveForUnit(abilities, version);
+  const misleadEligible = misleadActiveForUnit(abilities, unitTypeVal, version);
   const effectiveAbilities = {
     ...abilities,
+    doomGaze: baseDoomGazeWithBlazingEyes,
+    innerPower: innerPowerEligible ? abilities.innerPower : false,
+    mislead: misleadEligible ? abilities.mislead : false,
+    supernatural: ((abilities && abilities.supernatural) || destinyActive),
     supremeLight: supremeLightEligible ? abilities.supremeLight : false,
     survivalInstinct: survivalInstinctEligible ? abilities.survivalInstinct : false,
   };
@@ -457,13 +471,20 @@ function readUnitStats(prefix) {
     : 0;
   const lionheartRtbMod = lionheartActive
     && (rangedType === 'missile' || rangedType === 'boulder' || thrownType === 'thrown') ? 3 : 0;
+  // Endurance: CoM gives +2 defense; CoM2 instead gives +4 total HP split evenly
+  // between figures, with a minimum of +1 HP per figure.
+  const enduranceActive = !!(abilities && abilities.endurance);
+  const enduranceDefMod = enduranceActive && version.startsWith('com_') ? 2 : 0;
+  const enduranceHpMod = enduranceActive && version.startsWith('com2')
+    ? Math.max(1, Math.floor(4 / baseFigs))
+    : 0;
 
   // Charm of Life: +1 HP per figure if base HP ≤ 7, else +25% (floor) of base HP.
   const charmOfLifeHpMod = (abilities && abilities.charmOfLife)
-    ? (baseHP >= 8 ? Math.floor(baseHP * 0.25) : 1)
+    ? (calcBaseHP >= 8 ? Math.floor(calcBaseHP * 0.25) : 1)
     : 0;
   const supremeLightDefMod = supremeLightEligible
-    ? Math.floor(Math.max(0, baseRes + lvl.res + abilMods.resMod + nodeBonus + darkLightBonus) / 3)
+    ? Math.floor(Math.max(0, calcBaseRes + lvl.res + abilMods.resMod + nodeBonus + darkLightBonus) / 3)
     : 0;
   const levelRank = ({
     normal: 0,
@@ -472,7 +493,7 @@ function readUnitStats(prefix) {
     elite: 3,
     ultra_elite: 4,
     champion: 5,
-  })[level] || 0;
+  })[effectiveLevel] || 0;
   const disciplineVal = version.startsWith('com2') ? ((abilities && abilities.discipline) || 'none') : 'none';
   const disciplineActive = disciplineVal === 'overland' || disciplineVal === 'combat';
   const combatDisciplineNegatesFirstStrike = disciplineVal === 'combat' && levelRank >= 3;
@@ -482,10 +503,10 @@ function readUnitStats(prefix) {
   const disciplineRtbMod = disciplineActive && levelRank >= 2
     && (rangedType === 'missile' || rangedType === 'boulder') ? 1 : 0;
 
-  const atk = baseAtk > 0 ? Math.max(0, baseAtk + lvl.atk + wpn.atk + abilMods.atkMod + disciplineAtkMod + nodeBonus + darkLightBonus) : 0;
-  const def = Math.max(0, baseDef + lvl.def + wpn.def + cityWallBonus + abilMods.defMod + disciplineDefMod + supremeLightDefMod + nodeBonus + darkLightBonus);
-  const res = Math.max(0, baseRes + lvl.res + abilMods.resMod + nodeBonus + darkLightBonus);
-  const hp  = Math.max(1, baseHP + lvl.hp + abilMods.hpMod + lionheartHpMod + charmOfLifeHpMod);
+  const atk = calcBaseAtk > 0 ? Math.max(0, calcBaseAtk + lvl.atk + wpn.atk + abilMods.atkMod + disciplineAtkMod + nodeBonus + darkLightBonus) : 0;
+  const def = Math.max(0, calcBaseDef + lvl.def + wpn.def + cityWallBonus + abilMods.defMod + enduranceDefMod + disciplineDefMod + supremeLightDefMod + nodeBonus + darkLightBonus);
+  const res = Math.max(0, calcBaseRes + lvl.res + abilMods.resMod + nodeBonus + darkLightBonus);
+  const hp  = Math.max(1, calcBaseHP + lvl.hp + abilMods.hpMod + lionheartHpMod + enduranceHpMod + charmOfLifeHpMod);
 
   // Metal Fires / Flame Blade: +1/+2 to missile and thrown rtb only (not boulder, magic).
   // Also upgrades normal weapon to magic for Weapon Immunity purposes.
@@ -500,6 +521,10 @@ function readUnitStats(prefix) {
   const focusMagicRtbMod = focusMagicBuffsExisting
     && (rangedType === 'magic_c' || rangedType === 'magic_n' || rangedType === 'magic_s'
       || thrownType === 'fire' || thrownType === 'lightning') ? 3 : 0;
+
+  // Reinforce Magic: +2 to magical ranged attack strength only.
+  const reinforceMagicRtbMod = (abilities && abilities.reinforceMagic)
+    && (rangedType === 'magic_c' || rangedType === 'magic_n' || rangedType === 'magic_s') ? 2 : 0;
 
   // Giant Strength: +1 thrown only (not missile/boulder/magic ranged, not breath).
   const gsRtbMod = (abilities.giantStrength && thrownType === 'thrown') ? 1 : 0;
@@ -539,13 +564,13 @@ function readUnitStats(prefix) {
   // Ranged/Thrown/Breath strength
   let rtbLvl = 0, rtbWpn = 0;
   if (rangedType !== 'none') {
-    rtbLvl = baseRtb > 0 ? lvl.ranged : 0;
-    rtbWpn = (baseRtb > 0 && rangedGetsWpn) ? wpn.atk : 0;
+    rtbLvl = calcBaseRtb > 0 ? lvl.ranged : 0;
+    rtbWpn = (calcBaseRtb > 0 && rangedGetsWpn) ? wpn.atk : 0;
   } else if (thrownType !== 'none') {
     rtbLvl = lvl.thrown;
-    rtbWpn = (baseRtb > 0 && thrownGetsWpn) ? wpn.atk : 0;
+    rtbWpn = (calcBaseRtb > 0 && thrownGetsWpn) ? wpn.atk : 0;
   }
-  const rtb = baseRtb > 0 ? Math.max(0, baseRtb + rtbLvl + rtbWpn + abilMods.rtbMod + disciplineRtbMod + fbRtbMod + blazingMarchRtbMod + focusMagicRtbMod + gsRtbMod + lionheartRtbMod + weaknessRtbMod + nodeBonus + darkLightBonus) : 0;
+  const rtb = calcBaseRtb > 0 ? Math.max(0, calcBaseRtb + rtbLvl + rtbWpn + abilMods.rtbMod + disciplineRtbMod + fbRtbMod + blazingMarchRtbMod + focusMagicRtbMod + reinforceMagicRtbMod + gsRtbMod + lionheartRtbMod + weaknessRtbMod + nodeBonus + darkLightBonus) : 0;
 
   // Hidden gaze ranged attack: affected by same modifiers as ranged (level, node aura,
   // darkness/light, ability mods) but NOT weapon bonuses. In v1.31, if reduced to 0 the
@@ -558,7 +583,7 @@ function readUnitStats(prefix) {
 
   // Doom Gaze: delivers exact doom damage. Affected by node aura, darkness/light,
   // and ability modifiers (e.g. Black Prayer), but NOT level or weapon bonuses.
-  const baseDoomGaze = gazeOverwrittenByCC ? 0 : ((abilities && abilities.doomGaze) || 0);
+  const baseDoomGaze = gazeOverwrittenByCC ? 0 : (effectiveAbilities.doomGaze || 0);
   const effectiveDoomGaze = baseDoomGaze > 0
     ? Math.max(0, baseDoomGaze + abilMods.rtbMod + (focusMagicBuffsExisting && isCoM2 ? 3 : 0) + nodeBonus + darkLightBonus)
     : 0;
@@ -674,14 +699,14 @@ function readUnitStats(prefix) {
 
   return {
     // Base values (for display)
-    baseAtk, baseRtb, baseDef, baseRes, baseHP,
+    baseAtk: inputBaseAtk, baseRtb: inputBaseRtb, baseDef: inputBaseDef, baseRes: inputBaseRes, baseHP: inputBaseHP,
     baseToHitMod, baseToHitRtbMod, baseToBlkMod,
     // Bonus breakdown (for display)
-    atkBonus: baseAtk > 0 ? finalAtk - baseAtk : 0,
-    rtbBonus: baseRtb > 0 ? rtbLvl + rtbWpn + abilMods.rtbMod + disciplineRtbMod + fbRtbMod + blazingMarchRtbMod + focusMagicRtbMod + lionheartRtbMod + nodeBonus + darkLightBonus : 0,
-    defBonus: displayDef - baseDef,
-    resBonus: lvl.res + abilMods.resMod + nodeBonus + darkLightBonus,
-    hpBonus: lvl.hp + abilMods.hpMod + lionheartHpMod + charmOfLifeHpMod,
+    atkBonus: finalAtk - inputBaseAtk,
+    rtbBonus: finalRtb - inputBaseRtb,
+    defBonus: displayDef - inputBaseDef,
+    resBonus: finalRes - inputBaseRes,
+    hpBonus: hp - inputBaseHP,
     meleeToHitBonus,
     rtbToHitWpnBonus: rtbToHitWpn,
     rtbToHitLvlBonus: lvl.toHit,
