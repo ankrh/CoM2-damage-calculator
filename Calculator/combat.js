@@ -345,10 +345,11 @@ function getAbilityStatModifiers(abilities, version) {
 // Compute probability of failing a single poison resistance roll.
 // MoM: d10, success if roll ≤ Resistance. pFail = max(0, (10 - res) / 10).
 // CoM2: universal -1 save modifier → pFail = max(0, (11 - res) / 10).
-// Returns 0 if target is immune (Poison Immunity or Magic Immunity grants +50/+100 resistance, effective resistance ≥ 10).
+// Returns 0 if target is immune (Poison Immunity grants +50/+100 resistance, effective resistance ≥ 10).
+// Magic Immunity does NOT protect from Poison — it is not a magical effect.
 function poisonFailProb(defRes, defAbilities, version) {
   const isCoM = version && version.startsWith('com');
-  const immuneBonus = (defAbilities && (defAbilities.poisonImmunity || defAbilities.magicImmunity)) ? (isCoM ? 100 : 50) : 0;
+  const immuneBonus = (defAbilities && defAbilities.poisonImmunity) ? (isCoM ? 100 : 50) : 0;
   const penalty = isCoM ? 1 : 0;
   const effectiveRes = defRes - penalty + immuneBonus;
   if (effectiveRes >= 10) return 0;
@@ -493,12 +494,12 @@ function hasWeaponImmunityEffect(abilities) {
 
 // --- Weapon Immunity ---
 // Applies Weapon Immunity defense boost after armor piercing.
-// MoM: defense raised to minimum 10.  CoM2: +8 defense.
+// MoM: defense raised to minimum 10.  CoM/CoM2: +8 defense.
 // Triggers only against Normal units with normal (non-magical) weapons.
 // Phase applicability varies by version:
 //   Melee: always applies.
 //   Thrown: applies in all versions EXCEPT v1.31 (bug: thrown ignores WI).
-//   Ranged missile/boulder: MoM = never. CoM2 = applies.
+//   Ranged missile/boulder: always applies (all versions).
 //   Magic ranged: never (already magical).
 // v1.31 bug: Generic units (Trireme, Galley, Warship, Catapult) bypass WI regardless of attack type.
 function weaponImmunityDef(baseDef, defAbilities, atkWeapon, atkUnitType, version, atkGeneric) {
@@ -831,8 +832,10 @@ function applyUndeadImmunities(unit, version) {
   });
 }
 
-function applyAnimatedEffects(unit) {
+function applyAnimatedEffects(unit, version) {
   if (!unit.abilities || !unit.abilities.animated) return unit;
+  const isCoMPlus = version !== 'mom_1.31' && version !== 'mom_1.60';
+  if (!isCoMPlus) return unit;
   return Object.assign({}, unit, {
     abilities: Object.assign({}, unit.abilities, { weaponImmunity: true }),
   });
@@ -906,8 +909,8 @@ function resolveCombat(a, b, opts) {
   b = applyBloodLustEffects(b);
   a = applyUndeadImmunities(a, ver);
   b = applyUndeadImmunities(b, ver);
-  a = applyAnimatedEffects(a);
-  b = applyAnimatedEffects(b);
+  a = applyAnimatedEffects(a, ver);
+  b = applyAnimatedEffects(b, ver);
   a = applyBlackChannelsEffects(a);
   b = applyBlackChannelsEffects(b);
   a = Object.assign({}, a, { unitType: determineEffectiveUnitType(a.unitType, a.abilities, ver) });
@@ -970,12 +973,10 @@ function resolveCombat(a, b, opts) {
   // MoM: -20% To Hit and -1 Defense.
   // CoM/CoM2: no defense penalty; instead -30% To Hit and -1 To Defend
   // (implemented as -10 percentage points to block chance).
-  // Illusion/Magic Immunity prevent the curse from taking effect.
+  // Neither Illusion Immunity nor Magic Immunity negates Vertigo — we assume it was cast before those immunities were applied.
   const isCoM = ver && ver.startsWith('com');
-  const aVertigo = !!(a.abilities && a.abilities.vertigo)
-    && !(a.abilities && (a.abilities.illusionImmunity || a.abilities.magicImmunity));
-  const bVertigo = !!(b.abilities && b.abilities.vertigo)
-    && !(b.abilities && (b.abilities.illusionImmunity || b.abilities.magicImmunity));
+  const aVertigo = !!(a.abilities && a.abilities.vertigo);
+  const bVertigo = !!(b.abilities && b.abilities.vertigo);
   const vertigoHitPenalty = isCoM ? 0.3 : 0.2;
   const aToHitMeleeVert = aVertigo ? Math.max(0.1, a.toHitMelee - vertigoHitPenalty) : a.toHitMelee;
   const bToHitMeleeVert = bVertigo ? Math.max(0.1, b.toHitMelee - vertigoHitPenalty) : b.toHitMelee;
@@ -1049,17 +1050,16 @@ function resolveCombat(a, b, opts) {
   const aInvulnBonus = (a.abilities && a.abilities.invulnerability) ? 2 : 0;
   const bInvulnBonus = (b.abilities && b.abilities.invulnerability) ? 2 : 0;
 
-  // Bless (resistance half): +3 resistance vs Death-realm resistable effects
-  // (Cause Fear, Life Steal, Death Gaze). All three are Death realm regardless of
-  // caster, so the +3 applies whenever the defender has Bless. The defense half of
-  // Bless is computed further below once Large Shield / AP are known.
+  // Bless (resistance half): +3 resistance (MoM) or +5 (CoM/CoM2) vs Death-realm resistable
+  // effects (Cause Fear, Life Steal, Death Gaze). The defense half is computed further below.
   const bBless = !!(b.abilities && b.abilities.bless);
   const aBless = !!(a.abilities && a.abilities.bless);
+  const blessBonus = isCoM ? 5 : 3;
   // Resist Magic: +5 resistance vs all magical/special effects except Poison.
   const bResM = b.res + (b.abilities && b.abilities.resistMagic ? 5 : 0);
   const aResM = a.res + (a.abilities && a.abilities.resistMagic ? 5 : 0);
-  const bResDeath = bResM + (bBless ? 3 : 0);
-  const aResDeath = aResM + (aBless ? 3 : 0);
+  const bResDeath = bResM + (bBless ? blessBonus : 0);
+  const aResDeath = aResM + (aBless ? blessBonus : 0);
 
   // Elemental Armor / Resist Elements: defense and resistance bonus vs magical attacks.
   // Not cumulative — higher bonus wins. Bonus amounts and scope are version-sensitive.
@@ -1121,12 +1121,12 @@ function resolveCombat(a, b, opts) {
   const bDefLSNoVert = bLargeShield ? b.def + largeShieldBonus : b.def;
   const aDefLSNoVert = aLargeShield ? a.def + largeShieldBonus : a.def;
 
-  // Bless (defense half): +3 defense vs Death/Chaos conventional damage attacks.
+  // Bless (defense half): +3 defense (MoM) or +5 (CoM/CoM2) vs Death/Chaos conventional damage.
   // MoM 1.31/1.60:
-  //   Melee: Death/Chaos fantastic units (incl. Chaos Channeled) → +3 def
-  //   Fire Breath / Lightning Breath / Immolation / Wall of Fire: always Chaos → +3 def
-  //   Ranged Magic(C): always Chaos → +3 def
-  //   Ranged Missile/Boulder & Thrown: Death/Chaos fantastic units → +3 def
+  //   Melee: Death/Chaos fantastic units (incl. Chaos Channeled) → +blessBonus def
+  //   Fire Breath / Lightning Breath / Immolation / Wall of Fire: always Chaos → +blessBonus def
+  //   Ranged Magic(C): always Chaos → +blessBonus def
+  //   Ranged Missile/Boulder & Thrown: Death/Chaos fantastic units → +blessBonus def
   // CoM/CoM2:
   //   No melee protection vs Chaos/Death creatures; only spells and ranged/breath/gaze-style
   //   attacks retain the Bless defense bonus.
@@ -1140,14 +1140,14 @@ function resolveCombat(a, b, opts) {
   const aRangedDC = a.rangedType === 'magic_c'
                   || ((a.rangedType === 'missile' || a.rangedType === 'boulder') && aIsDC);
   const blessMeleeActive = !isCoM;
-  const blessBMelee  = (blessMeleeActive && bBless && aIsDC) ? 3 : 0;
-  const blessAMelee  = (blessMeleeActive && aBless && bIsDC) ? 3 : 0;
-  const blessBThrown = (bBless && aThrownDC) ? 3 : 0;
-  const blessBRanged = (bBless && aRangedDC) ? 3 : 0;
-  const blessBGaze   = (bBless && aIsDC)     ? 3 : 0;
-  const blessAGaze   = (aBless && bIsDC)     ? 3 : 0;
-  const blessBImm    = bBless ? 3 : 0;
-  const blessAImm    = aBless ? 3 : 0;
+  const blessBMelee  = (blessMeleeActive && bBless && aIsDC) ? blessBonus : 0;
+  const blessAMelee  = (blessMeleeActive && aBless && bIsDC) ? blessBonus : 0;
+  const blessBThrown = (bBless && aThrownDC) ? blessBonus : 0;
+  const blessBRanged = (bBless && aRangedDC) ? blessBonus : 0;
+  const blessBGaze   = (bBless && aIsDC)     ? blessBonus : 0;
+  const blessAGaze   = (aBless && bIsDC)     ? blessBonus : 0;
+  const blessBImm    = bBless ? blessBonus : 0;
+  const blessAImm    = aBless ? blessBonus : 0;
 
   // Elemental Armor / Resist Elements defense triggers: which attack types trigger the bonus.
   // CoM: ALL magic ranged (incl. sorcery) + breath; NOT physical thrown. MoM: Chaos/Nature magic ranged + breath.

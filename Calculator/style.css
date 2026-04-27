@@ -8,6 +8,22 @@
   --two-panel-width: calc(480px * 2 + 1.5rem);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; scrollbar-color: var(--border) transparent; }
+.tt {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  display: none;
+  background: #161b30;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.45rem 0.65rem;
+  font-family: 'Consolas', 'Cascadia Code', monospace;
+  font-size: 0.78rem;
+  color: var(--text);
+  white-space: pre;
+  line-height: 1.45;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.6);
+}
 *::-webkit-scrollbar { width: 6px; }
 *::-webkit-scrollbar-track { background: transparent; }
 *::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }

@@ -35,7 +35,7 @@
       <div class="unit-combobox"><input type="text" id="aUnitSearch" class="unit-search" placeholder="Custom" autocomplete="off"><div class="unit-dropdown-list" id="aUnitList"></div><input type="hidden" id="aUnit" value="custom"></div>
     </div>
     <div class="panel-fields">
-      <label for="aAbil_unitType">Unit Type</label>
+      <label for="aAbil_unitType" data-tooltip="Affects which enchantments can be cast on the unit and some immunity effects.">Unit Type</label>
       <select id="aAbil_unitType">
         <option value="normal">Normal</option>
         <option value="hero">Hero</option>
@@ -47,15 +47,15 @@
         <option value="fantastic_arcane">Fantastic (Arcane)</option>
       </select>
 
-      <label for="aFigs">Figures</label>
+      <label for="aFigs" data-tooltip="Number of figures in the unit. Each living figure contributes attacks.">Figures</label>
       <input type="number" id="aFigs" min="1" max="9" value="4">
       <span class="mod-val"></span>
 
-      <label for="aAtk">Attack</label>
+      <label for="aAtk" data-tooltip="Melee attack strength — number of dice rolled per figure.">Attack</label>
       <input type="number" id="aAtk" min="0" max="50" value="3">
       <span class="mod-val" id="aAtkMod"></span>
 
-      <label for="aRtbType">Ranged/Thrown/Breath</label>
+      <label for="aRtbType" data-tooltip="Ranged, thrown or breath attack type and strength.">Ranged/Thrown/Breath</label>
       <select class="mid" id="aRtbType">
         <option value="none" selected>None</option>
         <option value="missile">Missile</option>
@@ -70,38 +70,38 @@
       <input type="number" id="aRtb" min="0" max="50" value="0">
       <span class="mod-val" id="aRtbMod"></span>
 
-      <label for="aToHitMod">To hit melee</label>
+      <label for="aToHitMod" data-tooltip="Base 30% + modifier = chance per die to score a hit (melee).">To hit melee</label>
       <span class="prefix">30% +</span>
       <input type="number" id="aToHitMod" min="-20" max="70" value="0">
       <span class="mod-val" id="aToHitMeleeMod"></span>
 
-      <label for="aToHitRtbMod">To hit ranged/thrown/breath</label>
+      <label for="aToHitRtbMod" data-tooltip="Base 30% + modifier = chance per die to score a hit (ranged/thrown/breath).">To hit ranged/thrown/breath</label>
       <span class="prefix">30% +</span>
       <input type="number" id="aToHitRtbMod" min="-20" max="70" value="0">
       <span class="mod-val" id="aToHitRtbModDisp"></span>
 
-      <label for="aToBlkMod">To block</label>
+      <label for="aToBlkMod" data-tooltip="Base 30% + modifier = chance per defense die to perform a block.">To block</label>
       <span class="prefix">30% +</span>
       <input type="number" id="aToBlkMod" min="-20" max="70" value="0">
       <span class="mod-val" id="aToBlkModDisp"></span>
 
-      <label for="aDef">Defense</label>
+      <label for="aDef" data-tooltip="Number of defense dice rolled. Each block removes one incoming hit.">Defense</label>
       <input type="number" id="aDef" min="0" max="50" value="2">
       <span class="mod-val" id="aDefMod"></span>
 
-      <label for="aRes">Resistance</label>
+      <label for="aRes" data-tooltip="Resist score used in resistance rolls. Each point = 10% chance to resist.">Resistance</label>
       <input type="number" id="aRes" min="0" max="50" value="5">
       <span class="mod-val" id="aResMod"></span>
 
-      <label for="aHP">Hit Points</label>
+      <label for="aHP" data-tooltip="Hit points per figure. A figure dies when accumulated damage reaches this value.">Hit Points</label>
       <input type="number" id="aHP" min="1" max="99" value="1">
       <span class="mod-val" id="aHPMod"></span>
 
-      <label for="aDmg">Damage Taken</label>
+      <label for="aDmg" data-tooltip="Damage already on the top figure.">Damage Taken</label>
       <input type="number" id="aDmg" min="0" max="999" value="0">
       <span class="mod-val"></span>
 
-      <label for="aLevel">Level</label>
+      <label for="aLevel" data-tooltip="MoM 1.31 &amp; 1.60:&#10;Regular:     +1 atk/rng/thr, +1 res&#10;Veteran:     +1 atk/rng/thr, +2 res, +1 def&#10;Elite:       +2 atk/rng/thr, +3 res, +1 def, +1 hp, +10% hit&#10;Ultra Elite: +2 atk/rng/thr, +4 res, +2 def, +1 hp, +20% hit&#10;Champion:    +3 atk/rng/thr, +5 res, +2 def, +2 hp, +30% hit&#10;&#10;CoM &amp; CoM2:&#10;Regular:     +1 atk/rng, +1 res&#10;Veteran:     +2 atk/rng, +1 res, +1 thr, +1 def&#10;Elite:       +2 atk/rng, +2 res, +1 thr, +2 def, +1 hp&#10;Ultra Elite: +3 atk/rng, +2 res, +1 thr, +3 def, +1 hp&#10;Champion:    +3 atk/rng, +2 res, +1 thr, +3 def, +2 hp, +10% hit">Level</label>
       <select id="aLevel" disabled>
         <option value="normal" selected>Normal</option>
         <option value="regular">Regular</option>
@@ -111,12 +111,18 @@
         <option value="champion">Champion</option>
       </select>
 
-      <label for="aWeapon">Weapon Type</label>
+      <label for="aWeapon" data-tooltip="Magic:      +10% To Hit&#10;Mithril:    +10% To Hit, +1 atk, +1 def&#10;Adamantium: +10% To Hit, +2 atk, +2 def&#10;All three bypass Weapon Immunity.&#10;To Hit: melee, missile, boulder only.&#10;Atk:    melee, missile, boulder, thrown only.">Weapon Type</label>
       <select id="aWeapon">
         <option value="normal" selected>Normal</option>
         <option value="magic">Magic</option>
         <option value="mithril">Mithril</option>
         <option value="adamantium">Adamantium</option>
+      </select>
+
+      <label for="aArmor" data-tooltip="Orihalcon: +1 resistance, +2 magic ranged attack.">Armor Type</label>
+      <select id="aArmor">
+        <option value="normal" selected>Normal</option>
+        <option value="orihalcon">Orihalcon</option>
       </select>
     </div>
     <div class="abilities-section hide-inactive">
@@ -131,7 +137,7 @@
       <div class="unit-combobox"><input type="text" id="bUnitSearch" class="unit-search" placeholder="Custom" autocomplete="off"><div class="unit-dropdown-list" id="bUnitList"></div><input type="hidden" id="bUnit" value="custom"></div>
     </div>
     <div class="panel-fields">
-      <label for="bAbil_unitType">Unit Type</label>
+      <label for="bAbil_unitType" data-tooltip="Affects which enchantments can be cast on the unit and some immunity effects.">Unit Type</label>
       <select id="bAbil_unitType">
         <option value="normal">Normal</option>
         <option value="hero">Hero</option>
@@ -214,6 +220,12 @@
         <option value="mithril">Mithril</option>
         <option value="adamantium">Adamantium</option>
       </select>
+
+      <label for="bArmor">Armor Type</label>
+      <select id="bArmor">
+        <option value="normal" selected>Normal</option>
+        <option value="orihalcon">Orihalcon</option>
+      </select>
     </div>
     <div class="abilities-section hide-inactive">
       <button class="toggle-abil-btn" title="Show/hide inactive abilities and enchantments">Show all abilities</button>
@@ -224,7 +236,7 @@
 
 <div class="combat-enchantments">
   <div class="enchant-row">
-    <label class="abil-check"><span class="realm-life">True Light</span>/<span class="realm-death">Darkness</span>:
+    <label class="abil-check" data-tooltip="True Light (MoM 1.31 & 1.60 only): Life fantastic units +1 mel/rng/def/res; Death units &#8722;1.&#10;Darkness: Death fantastic units +1 mel/rng/def/res; Life units &#8722;1.&#10;Neither/Both: Neither is cast, or both cancel out."><span class="realm-life">True Light</span>/<span class="realm-death">Darkness</span>:
       <select id="enchLightDark" class="enchant-row-select">
         <option value="none" selected>Neither/Both</option>
         <option value="trueLight">True Light</option>
@@ -232,14 +244,14 @@
       </select>
     </label>
     <span class="field-group">
-      <label for="cityWalls">City walls:</label>
+      <label for="cityWalls" data-tooltip="Defense bonus applied to the defender only.&#10;MoM 1.31: Intact city wall: +3 def. Destroyed city wall or inner area: +1 def.&#10;MoM 1.60, CoM 1 &amp; 2: Intact city wall or inner area: +3 def. Destroyed city wall: +1 def.">City walls:</label>
       <select id="cityWalls">
         <option value="none" selected>None</option>
         <option value="1">+1 def</option>
         <option value="3">+3 def</option>
       </select>
     </span>
-    <label class="abil-check">Node aura:
+    <label class="abil-check" data-tooltip="Matching fantastic units get +2 melee, ranged, thrown, breath, gaze, defense, and resistance.">Node aura:
       <select id="nodeAura" class="enchant-row-select">
         <option value="none" selected>None</option>
         <option value="chaos">Chaos</option>
@@ -247,19 +259,19 @@
         <option value="sorcery">Sorcery</option>
       </select>
     </label>
-    <label class="check-label">
+    <label class="check-label" data-tooltip="Area fire attack on all attacker figures, firing before the melee phase.&#10;MoM 1.31 &amp; 1.60: Strength 5.&#10;CoM 1 &amp; 2: Strength 10.&#10;Immune: Fire Immunity, Magic Immunity, Righteousness.">
       <input type="checkbox" id="wallOfFire"> <span class="realm-chaos">Wall of Fire</span>
     </label>
-    <label class="check-label">
+    <label class="check-label" data-tooltip="All non-Chaos units get &#8722;20% To Hit.">
       <input type="checkbox" id="warpReality"> <span class="realm-chaos">Warp Reality</span>
     </label>
   </div>
   <div class="enchant-row" style="justify-content: flex-start; gap: 1.5rem;">
-    <label id="rangedCheckLabel" class="check-label">
+    <label id="rangedCheckLabel" class="check-label" data-tooltip="Sets combat mode to ranged. Only available if the attacker has a ranged attack.">
       <input type="checkbox" id="rangedCheck" checked> Ranged attack
     </label>
     <span class="field-group" id="rangedDistLabel">
-      <label for="rangedDist">Ranged attack distance:</label>
+      <label for="rangedDist" data-tooltip="Missile and boulder only. Magic ranged ignores distance.&#10;MoM 1.31 &amp; 1.60: &#8722;10/&#8722;20/&#8722;30% at 3/6/9 tiles.&#10;CoM 1: &#8722;10/&#8722;20/&#8722;30% at 4/8/12 tiles.&#10;CoM 2: &#8722;10% at 4 tiles, then &#8722;3% per additional tile.&#10;Long Range caps penalty at &#8722;10%.">Ranged attack distance:</label>
       <input type="number" id="rangedDist" min="1" max="99" value="1">
     </span>
   </div>
@@ -280,6 +292,7 @@
 </div><!-- /page-layout -->
 
 <!-- Load order: units (data blobs) -> data (constants) -> engine (math) -> combat (logic) -> ui (DOM) -->
+<div id="tt" class="tt"></div>
 <script src="units.js"></script>
 <script src="data.js"></script>
 <script src="engine.js"></script>

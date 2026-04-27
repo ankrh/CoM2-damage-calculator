@@ -26,5 +26,4 @@ mojibake
 
 does destiny remove the buff from magical/mithril/adamantium weapons?
 
-orihalcon
-
+does animate dead give +ranged attack?

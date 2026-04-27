@@ -56,6 +56,7 @@ function buildAbilitiesUI(prefix) {
       const lbl = document.createElement('label');
       lbl.className = 'abil-check abil-item';
       lbl.dataset.abilKey = abil.key;
+      if (abil.tooltip) lbl.dataset.tooltip = abil.tooltip;
       lbl.innerHTML = `<input type="checkbox" id="${id}"> ${labelHtml}`;
       gridDiv.appendChild(lbl);
     } else if (abil.type === 'select') {
@@ -63,6 +64,7 @@ function buildAbilitiesUI(prefix) {
       row.className = 'abil-num-row abil-item';
       row.dataset.abilKey = abil.key;
       row.dataset.abilDefault = abil.options[0][0];
+      if (abil.tooltip) row.dataset.tooltip = abil.tooltip;
       const opts = abil.options.map(([v, l]) => `<option value="${v}">${l}</option>`).join('');
       row.innerHTML = `<label for="${id}">${labelHtml}</label><select id="${id}">${opts}</select>`;
       gridDiv.appendChild(row);
@@ -70,12 +72,14 @@ function buildAbilitiesUI(prefix) {
       const row = document.createElement('div');
       row.className = 'abil-num-row abil-item';
       row.dataset.abilKey = abil.key;
+      if (abil.tooltip) row.dataset.tooltip = abil.tooltip;
       row.innerHTML = `<input type="checkbox" id="${id}_on"><label for="${id}">${labelHtml}</label><input type="number" id="${id}" value="0" min="-50" max="50">`;
       gridDiv.appendChild(row);
     } else {
       const row = document.createElement('div');
       row.className = 'abil-num-row abil-item';
       row.dataset.abilKey = abil.key;
+      if (abil.tooltip) row.dataset.tooltip = abil.tooltip;
       row.innerHTML = `<label for="${id}">${labelHtml}</label><input type="number" id="${id}" value="0" min="-50" max="50">`;
       gridDiv.appendChild(row);
     }
@@ -348,6 +352,7 @@ function readUnitStats(prefix) {
   const lvl = getLevelBonuses(effectiveLevel, version);
   const weapon = document.getElementById(prefix + 'Weapon').value;
   const wpn = weaponBonus(weapon);
+  const armor = document.getElementById(prefix + 'Armor').value;
 
   const rtbTypeRaw = document.getElementById(prefix + 'RtbType').value;
   let rangedType = RANGED_TYPES.includes(rtbTypeRaw) ? rtbTypeRaw : 'none';
@@ -450,9 +455,11 @@ function readUnitStats(prefix) {
 
   // Darkness / True Light: +1/-1 to atk (non-spell), def, res for Death/Life fantastic units
   // Darkness: +1 Death, -1 Life. True Light: +1 Life, -1 Death. Both can be active (cancel out).
+  // True Light was removed in CoM 1 & 2; Darkness still exists in all versions.
   const lightDarkVal = document.getElementById('enchLightDark').value;
+  const isCoMVersion = version.startsWith('com');
   const hasDarkness = lightDarkVal === 'darkness';
-  const hasTrueLight = lightDarkVal === 'trueLight';
+  const hasTrueLight = lightDarkVal === 'trueLight' && !isCoMVersion;
   let darkLightBonus = 0;
   if (unitRealm === 'death') {
     if (hasDarkness) darkLightBonus += 1;
@@ -503,9 +510,15 @@ function readUnitStats(prefix) {
   const disciplineRtbMod = disciplineActive && levelRank >= 2
     && (rangedType === 'missile' || rangedType === 'boulder') ? 1 : 0;
 
+  // Orihalcon: +1 resistance, +2 magical ranged attack (CoM2 only).
+  const orihalconActive = armor === 'orihalcon';
+  const orihalconResMod = orihalconActive ? 1 : 0;
+  const orihalconRtbMod = orihalconActive
+    && (rangedType === 'magic_c' || rangedType === 'magic_n' || rangedType === 'magic_s') ? 2 : 0;
+
   const atk = calcBaseAtk > 0 ? Math.max(0, calcBaseAtk + lvl.atk + wpn.atk + abilMods.atkMod + disciplineAtkMod + nodeBonus + darkLightBonus) : 0;
   const def = Math.max(0, calcBaseDef + lvl.def + wpn.def + cityWallBonus + abilMods.defMod + enduranceDefMod + disciplineDefMod + supremeLightDefMod + nodeBonus + darkLightBonus);
-  const res = Math.max(0, calcBaseRes + lvl.res + abilMods.resMod + nodeBonus + darkLightBonus);
+  const res = Math.max(0, calcBaseRes + lvl.res + abilMods.resMod + orihalconResMod + nodeBonus + darkLightBonus);
   const hp  = Math.max(1, calcBaseHP + lvl.hp + abilMods.hpMod + lionheartHpMod + enduranceHpMod + charmOfLifeHpMod);
 
   // Metal Fires / Flame Blade: +1/+2 to missile and thrown rtb only (not boulder, magic).
@@ -570,7 +583,7 @@ function readUnitStats(prefix) {
     rtbLvl = lvl.thrown;
     rtbWpn = (calcBaseRtb > 0 && thrownGetsWpn) ? wpn.atk : 0;
   }
-  const rtb = calcBaseRtb > 0 ? Math.max(0, calcBaseRtb + rtbLvl + rtbWpn + abilMods.rtbMod + disciplineRtbMod + fbRtbMod + blazingMarchRtbMod + focusMagicRtbMod + reinforceMagicRtbMod + gsRtbMod + lionheartRtbMod + weaknessRtbMod + nodeBonus + darkLightBonus) : 0;
+  const rtb = calcBaseRtb > 0 ? Math.max(0, calcBaseRtb + rtbLvl + rtbWpn + abilMods.rtbMod + disciplineRtbMod + fbRtbMod + blazingMarchRtbMod + focusMagicRtbMod + reinforceMagicRtbMod + orihalconRtbMod + gsRtbMod + lionheartRtbMod + weaknessRtbMod + nodeBonus + darkLightBonus) : 0;
 
   // Hidden gaze ranged attack: affected by same modifiers as ranged (level, node aura,
   // darkness/light, ability mods) but NOT weapon bonuses. In v1.31, if reduced to 0 the
@@ -903,7 +916,7 @@ function swapAttackerDefender() {
   aUnitSel.value = bUnitSel.value;
   bUnitSel.value = tmp;
 
-  const simpleFields = ['Figs', 'Atk', 'RtbType', 'Rtb', 'ToHitMod', 'ToHitRtbMod', 'ToBlkMod', 'Def', 'Res', 'HP', 'Dmg', 'Level', 'Weapon'];
+  const simpleFields = ['Figs', 'Atk', 'RtbType', 'Rtb', 'ToHitMod', 'ToHitRtbMod', 'ToBlkMod', 'Def', 'Res', 'HP', 'Dmg', 'Level', 'Weapon', 'Armor'];
   for (const f of simpleFields) {
     const aEl = document.getElementById('a' + f);
     const bEl = document.getElementById('b' + f);
@@ -1178,9 +1191,19 @@ function updateTypeVisibility() {
     if (input) input.classList.toggle('disabled-field', sel.value === 'none');
   });
 
-  // Version and unit type restrictions on enchantments.
+  // Armor type is CoM/CoM2-only; grey it out for MoM versions.
   const version = document.getElementById('gameVersion').value;
   const isMoM = version === 'mom_1.31' || version === 'mom_cp_1.60.00';
+  ['aArmor', 'bArmor'].forEach(id => {
+    const el = document.getElementById(id);
+    const label = document.querySelector(`label[for="${id}"]`);
+    el.classList.toggle('disabled-field', isMoM);
+    if (label) label.classList.toggle('disabled-field', isMoM);
+    el.disabled = isMoM;
+    if (isMoM) el.value = 'normal';
+  });
+
+  // Version and unit type restrictions on enchantments.
   const isCoMorCoM2 = version === 'com_6.08' || version === 'com2_1.05.11';
   const isCoM2 = version === 'com2_1.05.11';
 
@@ -1248,6 +1271,17 @@ function updateTypeVisibility() {
   document.getElementById('rangedDistLabel').classList.toggle('disabled-field', !isRanged);
   rangedDist.classList.toggle('disabled-field', !isRanged);
   rangedDist.disabled = !isRanged;
+
+  for (const prefix of ['a', 'b']) {
+    const armorSel = document.getElementById(prefix + 'Armor');
+    if (!armorSel) continue;
+    if (isMoM) {
+      armorSel.value = 'normal';
+      armorSel.disabled = true;
+    } else {
+      armorSel.disabled = false;
+    }
+  }
 }
 
 function refreshAbilityFieldVisibility() {
@@ -1284,6 +1318,7 @@ function applyPreset(name) {
     document.getElementById(prefix + 'HP').value = s.hp;
     document.getElementById(prefix + 'Dmg').value = s.dmg;
     document.getElementById(prefix + 'Weapon').value = s.weapon;
+    document.getElementById(prefix + 'Armor').value = s.armor || 'normal';
     document.getElementById(prefix + 'Level').value = s.level;
     document.getElementById(prefix + 'Abil_unitType').value = s.unitType;
     clearAbilities(prefix);
@@ -1581,3 +1616,43 @@ document.querySelectorAll('.abil-item').forEach(item => {
 // Initial load
 onVersionChange();
 updateAbilityVisibility();
+
+// --- Cursor-following tooltip ---
+(function initTooltip() {
+  const tip = document.getElementById('tt');
+
+  // Propagate data-tooltip from each label to the input/select siblings that follow it
+  // in the same panel-fields grid, until the next label resets the current tooltip.
+  document.querySelectorAll('.panel-fields').forEach(grid => {
+    let cur = null;
+    for (const child of grid.children) {
+      if (child.tagName === 'LABEL') {
+        cur = child.dataset.tooltip || null;
+      } else if (cur && (child.tagName === 'INPUT' || child.tagName === 'SELECT')) {
+        if (!child.dataset.tooltip) child.dataset.tooltip = cur;
+      }
+    }
+  });
+  document.addEventListener('mousemove', e => {
+    let el = e.target;
+    while (el && el !== document.documentElement) {
+      if (el.dataset && el.dataset.tooltip) break;
+      el = el.parentElement;
+    }
+    const text = el && el.dataset && el.dataset.tooltip;
+    if (text) {
+      tip.textContent = text;
+      tip.style.display = 'block';
+      const offX = 14, offY = 14;
+      let x = e.clientX + offX;
+      let y = e.clientY + offY;
+      if (x + tip.offsetWidth > window.innerWidth)  x = e.clientX - tip.offsetWidth - 6;
+      if (y + tip.offsetHeight > window.innerHeight) y = e.clientY - tip.offsetHeight - 6;
+      tip.style.left = x + 'px';
+      tip.style.top  = y + 'px';
+    } else {
+      tip.style.display = 'none';
+    }
+  });
+  document.addEventListener('mouseleave', () => { tip.style.display = 'none'; });
+})();
