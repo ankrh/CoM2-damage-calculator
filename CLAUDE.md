@@ -27,9 +27,9 @@ Ability-named subgroups in `TEST_TREE` (e.g. "Haste", "Wall of Fire", "Immolatio
 - **"Version differences tests"** — for mechanics that behave differently across versions. Each version-specific subgroup must contain **pairs** of directly corresponding test cases where **the only difference between entries is the version** — same unit stats, same ability, same scenario. A lone test with no counterpart does not belong here. This makes the behavioral delta immediately legible.
 
 ## Testing with Playwright
-- Use `nocache_server.py` instead of `python -m http.server` — it sets `Cache-Control: no-store` headers to prevent browser caching. **Port is 8080** (`http://localhost:8080`):
+- Use `tools/nocache_server.py` instead of `python -m http.server` — it sets `Cache-Control: no-store` headers to prevent browser caching. **Port is 8080** (`http://localhost:8080`):
   ```
-  python nocache_server.py &
+  python tools/nocache_server.py &
   sleep 1 && curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/
   ```
 - **Start this server before the first Playwright navigation** so the browser never caches stale files. If the Playwright browser has already cached old JS, a page reload won't help — the disk cache persists across tab closes and navigations.

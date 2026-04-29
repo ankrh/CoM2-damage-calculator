@@ -4,7 +4,7 @@ Shows CoM2 stats. Where a stat differs from the MoM equivalent, annotates as `Mo
 """
 import json
 
-MOM_INPUT  = "MoM units.json"
+MOM_INPUT  = "MoM 1.31 unit data.json"
 COM2_INPUT = "CoM2 units.json"
 OUTPUT     = "MoM CoM2 unit comparison.md"
 

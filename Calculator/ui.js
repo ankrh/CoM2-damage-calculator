@@ -93,8 +93,7 @@ function parseAbilitiesFromUnit(unit) {
   const normalized = abilities.map(a => a.replace(/ /g, ''));
   for (const abil of ABILITY_DEFS) {
     if (abil.type === 'bool') {
-      result[abil.key] = normalized.some(a => a === abil.match || a.startsWith(abil.match + '='))
-        || abilities.some(a => a.startsWith(abil.match + ' ') && !a.includes('='));
+      result[abil.key] = normalized.some(a => a === abil.match || a.startsWith(abil.match + '='));
     } else if (abil.type === 'numcheck') {
       const found = normalized.find(a => a.startsWith(abil.match + '='));
       if (found) {
@@ -241,12 +240,22 @@ function initUnitCombobox(prefix) {
   function renderDropdown(query) {
     const allUnits = unitComboboxData[prefix] || [];
     const q = query.trim().toLowerCase();
+    const showCustom = q === '' || 'custom'.includes(q);
     const matches = q === '' ? allUnits : allUnits.filter(u => u.name.toLowerCase().includes(q) || u.cat.toLowerCase().includes(q));
 
     listEl.innerHTML = '';
     activeIndex = -1;
 
-    if (matches.length === 0) { listEl.style.display = 'none'; return; }
+    if (!showCustom && matches.length === 0) { listEl.style.display = 'none'; return; }
+
+    if (showCustom) {
+      const item = document.createElement('div');
+      item.className = 'unit-dropdown-item';
+      item.textContent = 'Custom';
+      item.dataset.id = 'custom';
+      item.addEventListener('mousedown', e => { e.preventDefault(); commitUnit('custom'); });
+      listEl.appendChild(item);
+    }
 
     let lastCat = null;
     for (const u of matches) {
@@ -301,8 +310,9 @@ function initUnitCombobox(prefix) {
       activeIndex = Math.max(activeIndex - 1, -1);
       updateActiveItem();
     } else if (e.key === 'Enter') {
-      if (activeIndex >= 0 && items[activeIndex]) {
-        commitUnit(items[activeIndex].dataset.id);
+      const target = activeIndex >= 0 ? items[activeIndex] : items[0];
+      if (target) {
+        commitUnit(target.dataset.id);
         searchEl.blur();
       }
     } else if (e.key === 'Escape') {
@@ -1129,17 +1139,23 @@ function renderDistPanel(container, title, dist, hp, numFigs, opts) {
   // opts.pDestroy overrides with a pre-computed cumulative value (used by phase panels).
   let destroyPct = '';
   if (opts && opts.pDestroy != null) {
-    destroyPct = ` &mdash; ${formatPct(opts.pDestroy)} destroyed`;
+    destroyPct = `<br>${formatPct(opts.pDestroy)} destroyed`;
   } else if (numFigs > 0 && hp > 0) {
     const totalRemHP = firstFigRem + (numFigs - 1) * hp;
     let pDestroy = 0;
     for (let d = totalRemHP; d < dist.length; d++) pDestroy += dist[d] || 0;
-    destroyPct = ` &mdash; ${formatPct(pDestroy)} destroyed`;
+    destroyPct = `<br>${formatPct(pDestroy)} destroyed`;
   }
 
   const barColor = (opts && opts.barColor) || '#ff4d6a';
 
-  let html = `<div class="dist-header">${title}: <span class="avg">${expected.toFixed(3)}</span>${destroyPct}</div>`;
+  let hpPct = '';
+  if (numFigs > 0 && hp > 0) {
+    const totalRemHP = firstFigRem + (numFigs - 1) * hp;
+    hpPct = ` <span class="hp-pct">(${(expected / totalRemHP * 100).toFixed(1)}% HP)</span>`;
+  }
+
+  let html = `<div class="dist-header">${title}:<br><span class="avg">${expected.toFixed(3)}</span>${hpPct}${destroyPct}</div>`;
   html += '<div class="dist-scroll"><table class="dist-table">';
   html += `<thead><tr><th>${colHeader}</th><th style="text-align:right">Chance</th></tr></thead><tbody>`;
 
@@ -1166,37 +1182,51 @@ function renderDistPanel(container, title, dist, hp, numFigs, opts) {
 }
 
 function renderBreakdownGrid(phases) {
-  const section = document.getElementById('breakdownSection');
   const grid = document.getElementById('breakdownGrid');
-  if (!phases || phases.length <= 1) {
-    section.style.display = 'none';
-    grid.innerHTML = '';
-    return;
-  }
-  section.style.display = '';
-  let html = '';
-  for (const phase of phases) {
-    html += `<div class="breakdown-phase-label">${phase.label}</div>`;
-    html += '<div class="dist-panel"></div>';
-    html += '<div class="dist-panel"></div>';
-  }
-  grid.innerHTML = html;
+  grid.innerHTML = '';
+  if (!phases || phases.length <= 1) return;
 
-  const panels = grid.querySelectorAll('.dist-panel');
-  let idx = 0;
   const breakdownOpts = { barColor: '#f0c030' };
-  for (const phase of phases) {
+
+  const heading = document.createElement('div');
+  heading.className = 'breakdown-heading';
+  heading.textContent = 'Phase breakdown';
+  grid.appendChild(heading);
+
+  for (let i = 0; i < phases.length; i++) {
+    const phase = phases[i];
+
+    const row = document.createElement('div');
+    row.className = 'breakdown-phase-row' + (i === 0 ? ' first-phase' : '');
+    grid.appendChild(row);
+
+    const label = document.createElement('div');
+    label.className = 'breakdown-phase-label';
+    label.textContent = phase.label;
+    row.appendChild(label);
+
+    const panels = document.createElement('div');
+    panels.className = 'breakdown-phase-panels';
+    row.appendChild(panels);
+
+    const panelA = document.createElement('div');
+    panelA.className = 'dist-panel';
+    panels.appendChild(panelA);
+
+    const panelB = document.createElement('div');
+    panelB.className = 'dist-panel';
+    panels.appendChild(panelB);
+
     if (phase.mode === 'feared') {
       const fearOpts = { barColor: '#c080ff', colHeader: 'Feared' };
-      renderDistPanel(panels[idx], 'Attacker figs feared', phase.atkDist, 0, 0, fearOpts);
-      renderDistPanel(panels[idx + 1], 'Defender figs feared', phase.defDist, 0, 0, fearOpts);
+      renderDistPanel(panelA, 'Attacker figs feared', phase.atkDist, 0, 0, fearOpts);
+      renderDistPanel(panelB, 'Defender figs feared', phase.defDist, 0, 0, fearOpts);
     } else {
       const atkOpts = phase.atkDestroyPct != null ? { ...breakdownOpts, pDestroy: phase.atkDestroyPct } : breakdownOpts;
       const defOpts = phase.defDestroyPct != null ? { ...breakdownOpts, pDestroy: phase.defDestroyPct } : breakdownOpts;
-      renderDistPanel(panels[idx], 'Mean damage to attacker', phase.atkDist, phase.atkHPper, phase.atkFigs, atkOpts);
-      renderDistPanel(panels[idx + 1], 'Mean damage to defender', phase.defDist, phase.defHPper, phase.defFigs, defOpts);
+      renderDistPanel(panelA, 'Mean damage to attacker', phase.atkDist, phase.atkHPper, phase.atkFigs, atkOpts);
+      renderDistPanel(panelB, 'Mean damage to defender', phase.defDist, phase.defHPper, phase.defFigs, defOpts);
     }
-    idx += 2;
   }
 }
 
@@ -1241,9 +1271,24 @@ function renderLifeStealSummary(result) {
 // --- Main Calculate ---
 // Reads stats once, updates displays, resolves combat, renders results.
 
+const REALM_PANEL_CLASSES = ['panel-realm-life','panel-realm-nature','panel-realm-sorcery','panel-realm-chaos','panel-realm-death','panel-realm-arcane','panel-realm-normal'];
+
+function applyPanelRealmClass(panelId, unitType) {
+  const el = document.getElementById(panelId);
+  if (!el || !unitType) return;
+  el.classList.remove(...REALM_PANEL_CLASSES);
+  let realm = unitType.startsWith('fantastic_') ? unitType.slice('fantastic_'.length) : 'normal';
+  if (realm === 'unaligned') realm = 'arcane';
+  if (!REALM_PANEL_CLASSES.includes('panel-realm-' + realm)) realm = 'normal';
+  el.classList.add('panel-realm-' + realm);
+}
+
 function recalculate() {
   const a = readUnitStats('a');
   const b = readUnitStats('b');
+
+  applyPanelRealmClass('panelA', a.unitType);
+  applyPanelRealmClass('panelB', b.unitType);
 
   // Update modified displays using the already-computed stats (no redundant reads)
   updateModifiedDisplay('a', a);
@@ -1667,7 +1712,7 @@ document.querySelectorAll('.abil-item').forEach(item => {
     const exp = preset.expected;
     const expLine = exp ? `${exp.dmgToA != null ? `E[A]=${exp.dmgToA.toFixed(3)}` : ''}${exp.dmgToA != null && exp.dmgToB != null ? ' ' : ''}${exp.dmgToB != null ? `E[B]=${exp.dmgToB.toFixed(3)}` : ''}` : '';
     const btn = document.createElement('button');
-    btn.onclick = () => applyPreset(name);
+    btn.onclick = () => { applyPreset(name); };
     btn.innerHTML = `${title}<br><small>${sub}</small>` +
       (expLine ? `<br><small style="color:var(--accent)">${expLine}</small>` : '');
     return btn;
@@ -1701,8 +1746,18 @@ document.querySelectorAll('.abil-item').forEach(item => {
 })();
 
 // Initial load
-onVersionChange();
-updateAbilityVisibility();
+(function setDefaults() {
+  document.getElementById('gameVersion').value = 'com2_1.05.11';
+  onVersionChange();
+  const db = unitDatabases['com2_1.05.11'] || [];
+  const hmUnit = db.find(u => u.name === 'High Men Spearmen');
+  const klUnit = db.find(u => u.name === 'Klackon Spearmen');
+  if (hmUnit) { document.getElementById('aUnit').value = String(hmUnit.id); syncUnitDisplay('a'); updateUnitLock('a'); }
+  if (klUnit) { document.getElementById('bUnit').value = String(klUnit.id); syncUnitDisplay('b'); updateUnitLock('b'); }
+  updateTypeVisibility();
+  updateAbilityVisibility();
+  recalculate();
+})();
 
 // --- Cursor-following tooltip ---
 (function initTooltip() {
@@ -1742,4 +1797,27 @@ updateAbilityVisibility();
     }
   });
   document.addEventListener('mouseleave', () => { tip.style.display = 'none'; });
+})();
+
+// --- Presets Drawer ---
+(function() {
+  const drawer = document.getElementById('presetsDrawer');
+  const toggle = document.getElementById('presetsToggle');
+  const overlay = document.getElementById('presetsOverlay');
+
+  function open() {
+    drawer.classList.add('open');
+    overlay.classList.add('active');
+    toggle.setAttribute('aria-expanded', 'true');
+  }
+  function close() {
+    drawer.classList.remove('open');
+    overlay.classList.remove('active');
+    toggle.setAttribute('aria-expanded', 'false');
+  }
+
+  toggle.addEventListener('click', () => {
+    drawer.classList.contains('open') ? close() : open();
+  });
+  overlay.addEventListener('click', close);
 })();
