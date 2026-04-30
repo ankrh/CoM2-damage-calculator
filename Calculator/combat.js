@@ -666,6 +666,42 @@ function calcFearBugDist(atkFigs, defFigs, pFear) {
   return d;
 }
 
+// Convolve a unit's active touch attacks into `dist`, capped at `cap`.
+// Touch attacks (Poison, Stoning, Dispel Evil, Life Steal, Immolation) all scale with
+// `atkFigs`. Each touch is active iff its trigger params are set:
+//   poisonStr > 0 && poisonFail > 0  → Poison Touch
+//   stoningFail > 0                   → Stoning Touch (kills figures, damage = targetHP)
+//   dispelEvilFail > 0                → Dispel Evil   (kills figures, damage = targetHP)
+//   lifeStealMod != null              → Life Steal    (uses lifeStealRes)
+//   immDist truthy                    → Immolation    (caller pre-computes the area dist)
+// Returns { dist, lifeStealEV, lifeStealDist }. lifeStealDist is the standalone life-steal
+// distribution (or null if life steal not active) — exposed so callers that need to display
+// or further transform it (e.g. Haste doubling) don't have to recompute.
+// Convolution is commutative, so the chosen order is purely a readability choice.
+function convolveTouchAttacks(dist, cap, atkFigs, p) {
+  let lifeStealEV = 0;
+  let lifeStealDist = null;
+  if (atkFigs <= 0) return { dist, lifeStealEV, lifeStealDist };
+  if (p.poisonStr > 0 && p.poisonFail > 0) {
+    dist = convolveDists(dist, calcResistDmgDist(atkFigs * p.poisonStr, p.poisonFail, cap), cap);
+  }
+  if (p.stoningFail > 0) {
+    dist = convolveDists(dist, calcFigureKillDmgDist(atkFigs, p.stoningFail, p.targetHP, cap), cap);
+  }
+  if (p.dispelEvilFail > 0) {
+    dist = convolveDists(dist, calcFigureKillDmgDist(atkFigs, p.dispelEvilFail, p.targetHP, cap), cap);
+  }
+  if (p.lifeStealMod != null) {
+    lifeStealDist = calcLifeStealDmgDist(atkFigs, p.lifeStealRes, p.lifeStealMod, cap);
+    dist = convolveDists(dist, lifeStealDist, cap);
+    lifeStealEV = expectedDamage(lifeStealDist);
+  }
+  if (p.immDist) {
+    dist = convolveDists(dist, p.immDist, cap);
+  }
+  return { dist, lifeStealEV, lifeStealDist };
+}
+
 // Compute melee + touch-attack damage distribution, weighted over possible
 // unfeared figure counts (Cause Fear).
 // fearDist: array where fearDist[k] = P(k figures attack), or null if no fear active.
@@ -708,6 +744,12 @@ function calcMeleeTouchOutcome(fearDist, maxFigs, isDoom, atk, toHit,
   const result = new Array(remHP + 1).fill(0);
   let lifeStealEV = 0;
   const lo = fearDist ? 0 : maxFigs;
+  const touchSpec = {
+    poisonStr, poisonFail,
+    stoningFail, dispelEvilFail, targetHP,
+    lifeStealMod, lifeStealRes,
+    immDist: immolationDist,
+  };
   for (let k = lo; k <= maxFigs; k++) {
     const pK = fearDist ? fearDist[k] : 1;
     if (pK < 1e-15) continue;
@@ -719,23 +761,9 @@ function calcMeleeTouchOutcome(fearDist, maxFigs, isDoom, atk, toHit,
     } else {
       dist = calcTotalDamageDist(k, atk, toHit, def, toBlock, targetHP, remHP, defInvulnBonus, blurChance, blurBuggy, defTopFigHP, minDamageFromHits);
     }
-    if (poisonStr > 0 && poisonFail > 0 && k > 0) {
-      dist = convolveDists(dist, calcResistDmgDist(k * poisonStr, poisonFail, remHP), remHP);
-    }
-    if (stoningFail > 0 && k > 0) {
-      dist = convolveDists(dist, calcFigureKillDmgDist(k, stoningFail, targetHP, remHP), remHP);
-    }
-    if (dispelEvilFail > 0 && k > 0) {
-      dist = convolveDists(dist, calcFigureKillDmgDist(k, dispelEvilFail, targetHP, remHP), remHP);
-    }
-    if (lifeStealMod !== null && k > 0) {
-      const lsDist = calcLifeStealDmgDist(k, lifeStealRes, lifeStealMod, remHP);
-      dist = convolveDists(dist, lsDist, remHP);
-      lifeStealEV += pK * expectedDamage(lsDist);
-    }
-    if (immolationDist && k > 0) {
-      dist = convolveDists(dist, immolationDist, remHP);
-    }
+    const tOut = convolveTouchAttacks(dist, remHP, k, touchSpec);
+    dist = tOut.dist;
+    lifeStealEV += pK * tOut.lifeStealEV;
     if (doubleStrike && k > 0 && atk > 0) {
       dist = convolveDists(dist, dist, remHP);
       if (lifeStealMod !== null) lifeStealEV += pK * expectedDamage(calcLifeStealDmgDist(k, lifeStealRes, lifeStealMod, remHP));
@@ -878,6 +906,156 @@ function bloodLustMeleeAttack(atkUnit, defUnit) {
   const targetIsNormal = defUnit && (defUnit.unitType === 'normal' || defUnit.unitType === 'hero');
   if (!targetIsNormal || !atkUnit.abilities || !atkUnit.abilities.bloodLust) return atkUnit.atk;
   return atkUnit.atk * 2;
+}
+
+// --- Resistance/Defense bonuses from Elemental Armor / Resist Elements ---
+// Bonus amounts to a unit's resistance vs Stoning. CoM RE +4 (Nature only); MoM both grant bonus.
+function elemResistBonus(unit, version) {
+  const elemVal = (unit.abilities && unit.abilities.elemArmor) || 'none';
+  const isCoM = version && version.startsWith('com');
+  if (isCoM) return elemVal === 'resistElements' ? 4 : 0;
+  return elemVal === 'elementalArmor' ? 10 : elemVal === 'resistElements' ? 3 : 0;
+}
+
+// --- Defense Profile ---
+// Compute defender's effective defense vs each attack type from `attacker`.
+// Aggregates: Vertigo def penalty, Large Shield, Bless (defense half), Elemental Armor,
+// Armor Piercing, Weapon Immunity, Missile Immunity, Righteousness, Magic Immunity,
+// Fire Immunity, and Illusion override (final).
+//   target: defender unit (provides def, abilities, cityWallBonus, weapon, unitType)
+//   attacker: attacking unit (provides weapon, unitType, rangedType, thrownType, abilities, generic)
+//   vertigoDefPenalty: precomputed Vertigo defense malus on the target (0 in CoM/CoM2).
+// Returns: { vsMelee, vsRanged, vsThrown, vsGaze, vsImmolation }
+function computeDefenseProfile(target, attacker, version, vertigoDefPenalty) {
+  const isCoM = version && version.startsWith('com');
+
+  // Bless (defense half) — version-sensitive scope (no melee bonus in CoM/CoM2).
+  const tBless = !!(target.abilities && target.abilities.bless);
+  const blessBonus = isCoM ? 5 : 3;
+  const aIsDC = attacker.unitType === 'fantastic_death' || attacker.unitType === 'fantastic_chaos';
+  const aThrownDC = attacker.thrownType === 'fire' || attacker.thrownType === 'lightning'
+                  || (attacker.thrownType === 'thrown' && aIsDC);
+  const aRangedDC = attacker.rangedType === 'magic_c'
+                  || ((attacker.rangedType === 'missile' || attacker.rangedType === 'boulder') && aIsDC);
+  const blessMeleeActive = !isCoM;
+  const blessMelee  = (blessMeleeActive && tBless && aIsDC) ? blessBonus : 0;
+  const blessThrown = (tBless && aThrownDC) ? blessBonus : 0;
+  const blessRanged = (tBless && aRangedDC) ? blessBonus : 0;
+  const blessGaze   = (tBless && aIsDC)     ? blessBonus : 0;
+  const blessImm    = tBless ? blessBonus : 0;
+
+  // Large Shield — applies to all non-melee phases.
+  const tLargeShield = !!(target.abilities && target.abilities.largeShield);
+  const largeShieldBonus = isCoM ? 3 : 2;
+
+  // Elemental Armor / Resist Elements defense bonus and per-phase trigger.
+  const tElemVal = (target.abilities && target.abilities.elemArmor) || 'none';
+  const elemDefBonus = isCoM
+    ? (tElemVal === 'elementalArmor' ? 12 : tElemVal === 'resistElements' ? 4 : 0)
+    : (tElemVal === 'elementalArmor' ? 10 : tElemVal === 'resistElements' ? 3 : 0);
+  const aRangedElem = isCoM
+    ? (attacker.rangedType === 'magic_c' || attacker.rangedType === 'magic_n' || attacker.rangedType === 'magic_s')
+    : (attacker.rangedType === 'magic_c' || attacker.rangedType === 'magic_n');
+  const aThrownElem = attacker.thrownType === 'fire' || attacker.thrownType === 'lightning';
+  const aStoningGazeOnly = !!(attacker.abilities && attacker.abilities.stoningGaze != null)
+                       && !(attacker.abilities && attacker.abilities.deathGaze != null);
+  const elemRanged = aRangedElem ? elemDefBonus : 0;
+  const elemThrown = aThrownElem ? elemDefBonus : 0;
+  const elemGaze   = (!isCoM && aStoningGazeOnly) ? elemDefBonus : 0;
+  // Immolation is fire/Chaos-realm — elem bonus applies in MoM but not CoM (not "magical ranged").
+  const elemImm    = !isCoM ? elemDefBonus : 0;
+
+  // Defense bases. Note: immolation deliberately uses pre-Vertigo `target.def` (Vertigo's
+  // defense penalty applies to conventional attacks, not immolation).
+  const defBase = Math.max(0, target.def - vertigoDefPenalty);
+  const defLS = tLargeShield ? defBase + largeShieldBonus : defBase;
+  const defLSNoVert = tLargeShield ? target.def + largeShieldBonus : target.def;
+
+  // Armor Piercing (and intrinsic Lightning Breath AP, cancelled by Lightning Resist).
+  const aArmorPiercing = !!(attacker.abilities && attacker.abilities.armorPiercing);
+  const tLightningResist = !!(target.abilities && target.abilities.lightningResist);
+  const lightningAP = attacker.thrownType === 'lightning' && !tLightningResist;
+  const halve = (n) => Math.floor(n / 2);
+  const defAPMelee   = aArmorPiercing ? halve(defBase + blessMelee)             : (defBase + blessMelee);
+  const defAPRanged  = aArmorPiercing ? halve(defLS + blessRanged + elemRanged) : (defLS + blessRanged + elemRanged);
+  const defAPGaze    = aArmorPiercing ? halve(defLS + blessGaze + elemGaze)     : (defLS + blessGaze + elemGaze);
+  const defAPImm     = aArmorPiercing ? halve(defLSNoVert + blessImm + elemImm) : (defLSNoVert + blessImm + elemImm);
+  const defAPThrown  = (aArmorPiercing || lightningAP)
+    ? halve(defLS + blessThrown + elemThrown) : (defLS + blessThrown + elemThrown);
+
+  // Weapon Immunity. Blazing March upgrades melee + missile attacks to magical weapons in CoM/CoM2.
+  const aBlazingMarch = !!(attacker.abilities && attacker.abilities.blazingMarch);
+  const meleeWeaponWI = (aBlazingMarch && attacker.weapon === 'normal') ? 'magic' : attacker.weapon;
+  const rangedWeaponWI = (aBlazingMarch && attacker.rangedType === 'missile' && attacker.weapon === 'normal')
+    ? 'magic' : attacker.weapon;
+
+  let vsMelee = weaponImmunityDef(defAPMelee, target.abilities, meleeWeaponWI, attacker.unitType, version, attacker.generic);
+  // Gaze: hidden ranged component — gaze attackers are always fantastic so WI never triggers,
+  // but Magic Immunity applies (it's a magical ranged attack).
+  let vsGaze = magicImmunityDef(
+    weaponImmunityDef(defAPGaze, target.abilities, attacker.weapon, attacker.unitType, version, attacker.generic),
+    target.abilities, version);
+
+  // Ranged: WI applies to physical ranged (missile/boulder); magic ranged is already magical.
+  const isPhysRanged = attacker.rangedType === 'missile' || attacker.rangedType === 'boulder';
+  let vsRanged = isPhysRanged
+    ? weaponImmunityDef(defAPRanged, target.abilities, rangedWeaponWI, attacker.unitType, version, attacker.generic)
+    : defAPRanged;
+
+  // Thrown: WI eligible except v1.31 bug. Breath (fire/lightning) is magical, never triggers WI.
+  const thrownWI = attacker.thrownType === 'thrown' && version !== 'mom_1.31';
+  let vsThrown = thrownWI
+    ? weaponImmunityDef(defAPThrown, target.abilities, attacker.weapon, attacker.unitType, version, attacker.generic)
+    : defAPThrown;
+
+  // Missile Immunity (vs missile only). v1.31 bug: WI overwrites MI when both apply.
+  const isMissile = attacker.rangedType === 'missile';
+  const wiTriggeredOnMissile = isMissile && target.abilities && target.abilities.weaponImmunity
+    && rangedWeaponWI === 'normal' && attacker.unitType === 'normal';
+  if (isMissile && !(version === 'mom_1.31' && wiTriggeredOnMissile)) {
+    vsRanged = missileImmunityDef(vsRanged, target.abilities, version);
+  }
+
+  // Righteousness vs Chaos magic ranged.
+  if (attacker.rangedType === 'magic_c') {
+    vsRanged = righteousnessDef(vsRanged, target.abilities, version);
+  }
+  // Magic Immunity vs all magic ranged.
+  if (attacker.rangedType === 'magic_c' || attacker.rangedType === 'magic_n' || attacker.rangedType === 'magic_s') {
+    vsRanged = magicImmunityDef(vsRanged, target.abilities, version);
+  }
+
+  // Breath: Fire Immunity, Righteousness, Magic Immunity (MoM only — CoM v2.3 removed MI on breath).
+  if (attacker.thrownType === 'fire') {
+    vsThrown = fireImmunityDef(vsThrown, target.abilities, version);
+  }
+  if (attacker.thrownType === 'fire' || attacker.thrownType === 'lightning') {
+    vsThrown = righteousnessDef(vsThrown, target.abilities, version);
+  }
+  if ((attacker.thrownType === 'fire' || attacker.thrownType === 'lightning') && !isCoM) {
+    vsThrown = magicImmunityDef(vsThrown, target.abilities, version);
+  }
+
+  // Immolation defense chain: AP-applied base → Magic Immunity → Fire Immunity → Righteousness.
+  let vsImmolation = righteousnessDef(
+    fireImmunityDef(
+      magicImmunityDef(defAPImm, target.abilities, version),
+      target.abilities, version),
+    target.abilities, version);
+
+  // Illusion: sets defense to city walls bonus only on every phase. Negated by Illusion Immunity.
+  const aIllusion = !!(attacker.abilities && attacker.abilities.illusion);
+  const tIllusionImmune = !!(target.abilities && target.abilities.illusionImmunity);
+  if (aIllusion && !tIllusionImmune) {
+    const cw = target.cityWallBonus || 0;
+    vsMelee = cw;
+    vsRanged = cw;
+    vsThrown = cw;
+    vsGaze = cw;
+    vsImmolation = cw;
+  }
+
+  return { vsMelee, vsRanged, vsThrown, vsGaze, vsImmolation };
 }
 
 // --- Combat Flow Modifiers ---
@@ -1071,11 +1249,9 @@ function resolveCombat(a, b, opts) {
   const aResM = a.res + (a.abilities && a.abilities.resistMagic ? 5 : 0);
   const bResDeath = bResM + (bBless ? blessBonus : 0);
   const aResDeath = aResM + (aBless ? blessBonus : 0);
-
-  // Elemental Armor / Resist Elements: defense and resistance bonus vs magical attacks.
-  // Not cumulative — higher bonus wins. Bonus amounts and scope are version-sensitive.
-  const bElemVal = (b.abilities && b.abilities.elemArmor) || 'none';
-  const aElemVal = (a.abilities && a.abilities.elemArmor) || 'none';
+  // Resist Stoning: +Elemental Armor/Resist Elements bonus on top of Resist Magic.
+  const bResStoning = bResM + elemResistBonus(b, ver);
+  const aResStoning = aResM + elemResistBonus(a, ver);
 
   // Cause Fear: reduces opponent's effective melee + touch-attack figures.
   // Fires before the melee exchange. No resistance modifier.
@@ -1101,128 +1277,20 @@ function resolveCombat(a, b, opts) {
   // Black Sleep also prevents all outgoing attacks.
   const hasThrown = !isRanged && a.thrownType !== 'none' && a.rtb > 0 && a.atk > 0 && !aBlackSleep;
 
-  // Large Shield: +2 defense (MoM) or +3 defense (CoM/CoM2) against ranged, thrown,
-  // breath, and gaze attacks. Does NOT apply against melee. Added before armor piercing
-  // so that AP halves the combined defense total.
-  const bLargeShield = !!(b.abilities && b.abilities.largeShield);
-  const aLargeShield = !!(a.abilities && a.abilities.largeShield);
-  const largeShieldBonus = isCoM ? 3 : 2;
-  // Elemental Armor / Resist Elements: version-sensitive bonus amounts.
-  // MoM: EA +10 def+res, RE +3 def+res vs Chaos/Nature magic ranged + fire/lightning breath.
-  // CoM: EA +12 def only (no res) vs ALL magic ranged (not thrown); RE +4 def + +4 res (Nature only).
-  const bElemDefBonus = isCoM
-    ? (bElemVal === 'elementalArmor' ? 12 : bElemVal === 'resistElements' ? 4 : 0)
-    : (bElemVal === 'elementalArmor' ? 10 : bElemVal === 'resistElements' ? 3 : 0);
-  const aElemDefBonus = isCoM
-    ? (aElemVal === 'elementalArmor' ? 12 : aElemVal === 'resistElements' ? 4 : 0)
-    : (aElemVal === 'elementalArmor' ? 10 : aElemVal === 'resistElements' ? 3 : 0);
-  // Resistance bonus: CoM EA has none; CoM RE +4 vs Nature (stoning) only; MoM both get bonus.
-  const bElemResBonus = isCoM
-    ? (bElemVal === 'resistElements' ? 4 : 0)
-    : (bElemVal === 'elementalArmor' ? 10 : bElemVal === 'resistElements' ? 3 : 0);
-  const aElemResBonus = isCoM
-    ? (aElemVal === 'resistElements' ? 4 : 0)
-    : (aElemVal === 'elementalArmor' ? 10 : aElemVal === 'resistElements' ? 3 : 0);
-  const bResStoning = bResM + bElemResBonus;
-  const aResStoning = aResM + aElemResBonus;
-  const bDefBase = Math.max(0, b.def - bVertigoDefPenalty);
-  const aDefBase = Math.max(0, a.def - aVertigoDefPenalty);
-  const bDefLS = bLargeShield ? bDefBase + largeShieldBonus : bDefBase;
-  const aDefLS = aLargeShield ? aDefBase + largeShieldBonus : aDefBase;
-  const bDefLSNoVert = bLargeShield ? b.def + largeShieldBonus : b.def;
-  const aDefLSNoVert = aLargeShield ? a.def + largeShieldBonus : a.def;
-
-  // Bless (defense half): +3 defense (MoM) or +5 (CoM/CoM2) vs Death/Chaos conventional damage.
-  // MoM 1.31/1.60:
-  //   Melee: Death/Chaos fantastic units (incl. Chaos Channeled) → +blessBonus def
-  //   Fire Breath / Lightning Breath / Immolation / Wall of Fire: always Chaos → +blessBonus def
-  //   Ranged Magic(C): always Chaos → +blessBonus def
-  //   Ranged Missile/Boulder & Thrown: Death/Chaos fantastic units → +blessBonus def
-  // CoM/CoM2:
-  //   No melee protection vs Chaos/Death creatures; only spells and ranged/breath/gaze-style
-  //   attacks retain the Bless defense bonus.
-  // Defense bonus is applied BEFORE armor piercing (AP halves it) and BEFORE
-  // defense-overriding effects (Fire/Magic Immunity, Righteousness, Illusion, Doom),
-  // so those effects wipe out the bonus entirely.
-  const aIsDC = a.unitType === 'fantastic_death' || a.unitType === 'fantastic_chaos';
-  const bIsDC = b.unitType === 'fantastic_death' || b.unitType === 'fantastic_chaos';
-  const aThrownDC = a.thrownType === 'fire' || a.thrownType === 'lightning'
-                  || (a.thrownType === 'thrown' && aIsDC);
-  const aRangedDC = a.rangedType === 'magic_c'
-                  || ((a.rangedType === 'missile' || a.rangedType === 'boulder') && aIsDC);
-  const blessMeleeActive = !isCoM;
-  const blessBMelee  = (blessMeleeActive && bBless && aIsDC) ? blessBonus : 0;
-  const blessAMelee  = (blessMeleeActive && aBless && bIsDC) ? blessBonus : 0;
-  const blessBThrown = (bBless && aThrownDC) ? blessBonus : 0;
-  const blessBRanged = (bBless && aRangedDC) ? blessBonus : 0;
-  const blessBGaze   = (bBless && aIsDC)     ? blessBonus : 0;
-  const blessAGaze   = (aBless && bIsDC)     ? blessBonus : 0;
-  const blessBImm    = bBless ? blessBonus : 0;
-  const blessAImm    = aBless ? blessBonus : 0;
-
-  // Elemental Armor / Resist Elements defense triggers: which attack types trigger the bonus.
-  // CoM: ALL magic ranged (incl. sorcery) + breath; NOT physical thrown. MoM: Chaos/Nature magic ranged + breath.
-  const aRangedElem = isCoM
-    ? (a.rangedType === 'magic_c' || a.rangedType === 'magic_n' || a.rangedType === 'magic_s')
-    : (a.rangedType === 'magic_c' || a.rangedType === 'magic_n');
-  const aThrownElem = a.thrownType === 'fire' || a.thrownType === 'lightning';
-  // Gaze physical component (stoning gaze only, not death gaze). CoM: not "magical ranged", no bonus.
-  const aStoningGazeOnly = !!(a.abilities && a.abilities.stoningGaze != null) && !(a.abilities && a.abilities.deathGaze != null);
-  const bStoningGazeOnly = !!(b.abilities && b.abilities.stoningGaze != null) && !(b.abilities && b.abilities.deathGaze != null);
-  const bElemRanged = aRangedElem ? bElemDefBonus : 0;
-  const bElemThrown = aThrownElem ? bElemDefBonus : 0;
-  const bElemGaze   = (!isCoM && aStoningGazeOnly) ? bElemDefBonus : 0;
-  const aElemGaze   = (!isCoM && bStoningGazeOnly) ? aElemDefBonus : 0;
-
-  // Armor Piercing: halve defense (round down) before immunities. Applies to all of
-  // the attacker's attacks. Lightning Breath is intrinsically armor piercing but only
-  // for the thrown/breath phase. Halving is applied at most once regardless of source.
-  // Lightning Resist on the defender cancels the intrinsic AP from lightning breath.
-  const aArmorPiercing = !!(a.abilities && a.abilities.armorPiercing);
-  const bArmorPiercing = !!(b.abilities && b.abilities.armorPiercing);
-  const bLightningResist = !!(b.abilities && b.abilities.lightningResist);
-  const bDefAP = aArmorPiercing ? Math.floor((bDefBase + blessBMelee) / 2) : (bDefBase + blessBMelee);
-  const aDefAP = bArmorPiercing ? Math.floor((aDefBase + blessAMelee) / 2) : (aDefBase + blessAMelee);
-  // Large Shield variants: applied to non-melee defense before AP. Bless bonus varies
-  // by phase (ranged vs gaze vs immolation), so each gets its own pre-AP value.
-  const bDefAPLSRanged = aArmorPiercing ? Math.floor((bDefLS + blessBRanged + bElemRanged) / 2) : (bDefLS + blessBRanged + bElemRanged);
-  const bDefAPLSGaze   = aArmorPiercing ? Math.floor((bDefLS + blessBGaze   + bElemGaze)   / 2) : (bDefLS + blessBGaze   + bElemGaze);
-  // Immolation is fire/Chaos-realm — elem bonus applies in MoM but not CoM (not "magical ranged").
-  const bElemImm = !isCoM ? bElemDefBonus : 0;
-  const aElemImm = !isCoM ? aElemDefBonus : 0;
-  const bDefAPLSImm    = aArmorPiercing ? Math.floor((bDefLSNoVert + blessBImm + bElemImm) / 2) : (bDefLSNoVert + blessBImm + bElemImm);
-  const aDefAPLSGaze   = bArmorPiercing ? Math.floor((aDefLS + blessAGaze   + aElemGaze)   / 2) : (aDefLS + blessAGaze   + aElemGaze);
-  const aDefAPLSImm    = bArmorPiercing ? Math.floor((aDefLSNoVert + blessAImm + aElemImm) / 2) : (aDefLSNoVert + blessAImm + aElemImm);
-  const bLightningAP = a.thrownType === 'lightning' && !bLightningResist;
-  const bDefAPThrownLS = (aArmorPiercing || bLightningAP)
-    ? Math.floor((bDefLS + blessBThrown + bElemThrown) / 2) : (bDefLS + blessBThrown + bElemThrown);
-
-  // Weapon Immunity: applied after armor piercing. Phase-specific eligibility.
-  // MoM: defense → min 10. CoM2: defense + 8. Only vs normal units with normal weapons.
-  // Blazing March upgrades melee and missile attacks to magical weapons in CoM/CoM2.
-  const aBlazingMarch = !!(a.abilities && a.abilities.blazingMarch);
-  const bBlazingMarch = !!(b.abilities && b.abilities.blazingMarch);
-  const aMeleeWeaponForWI = (aBlazingMarch && a.weapon === 'normal') ? 'magic' : a.weapon;
-  const bMeleeWeaponForWI = (bBlazingMarch && b.weapon === 'normal') ? 'magic' : b.weapon;
-  const aRangedWeaponForWI = (aBlazingMarch && a.rangedType === 'missile' && a.weapon === 'normal') ? 'magic' : a.weapon;
-  // Melee: always eligible
-  let bDefVsA = weaponImmunityDef(bDefAP, b.abilities, aMeleeWeaponForWI, a.unitType, ver, a.generic);
-  // Gaze: hidden ranged component — gaze attackers are always fantastic so WI never
-  // triggers, but Large Shield and Magic Immunity apply since it's a magical ranged attack.
-  let bDefForGaze = magicImmunityDef(weaponImmunityDef(bDefAPLSGaze, b.abilities, a.weapon, a.unitType, ver, a.generic), b.abilities, ver);
-  let aDefVsB = weaponImmunityDef(aDefAP, a.abilities, bMeleeWeaponForWI, b.unitType, ver, b.generic);
-  let aDefForGaze = magicImmunityDef(weaponImmunityDef(aDefAPLSGaze, a.abilities, b.weapon, b.unitType, ver, b.generic), a.abilities, ver);
-  // Ranged: WI applies to missile/boulder (physical ranged) in all versions.
-  // Does NOT apply to magic ranged (already magical damage).
-  // Large Shield bonus is included for all ranged types.
-  const isPhysRanged = a.rangedType === 'missile' || a.rangedType === 'boulder';
-  let bDefVsARanged = isPhysRanged
-    ? weaponImmunityDef(bDefAPLSRanged, b.abilities, aRangedWeaponForWI, a.unitType, ver, a.generic) : bDefAPLSRanged;
-  // Thrown: WI eligible except v1.31 bug. Breath (fire/lightning) is magical, never triggers WI.
-  // Large Shield bonus is included for thrown/breath.
-  const thrownWI = a.thrownType === 'thrown' && ver !== 'mom_1.31';
-  let bDefForThrown = thrownWI
-    ? weaponImmunityDef(bDefAPThrownLS, b.abilities, a.weapon, a.unitType, ver, a.generic) : bDefAPThrownLS;
+  // Defense profiles: defender's effective defense vs each attack type from the opponent.
+  // Aggregates Vertigo def penalty, Large Shield, Bless (defense half), Elemental Armor,
+  // Armor Piercing, Weapon/Missile/Magic/Fire Immunity, Righteousness, and Illusion.
+  // See computeDefenseProfile for the per-phase rules.
+  const bDefProfile = computeDefenseProfile(b, a, ver, bVertigoDefPenalty);
+  const aDefProfile = computeDefenseProfile(a, b, ver, aVertigoDefPenalty);
+  const bDefVsA       = bDefProfile.vsMelee;
+  const bDefVsARanged = bDefProfile.vsRanged;
+  const bDefForThrown = bDefProfile.vsThrown;
+  const bDefForGaze   = bDefProfile.vsGaze;
+  const bDefForImm    = bDefProfile.vsImmolation;
+  const aDefVsB       = aDefProfile.vsMelee;
+  const aDefForGaze   = aDefProfile.vsGaze;
+  const aDefForImm    = aDefProfile.vsImmolation;
 
   // Eldritch Weapon: -10pp to defender's toBlock on melee, thrown, and missile ranged attacks.
   // Does not apply to breath, ranged boulder, or ranged magical attacks.
@@ -1239,77 +1307,13 @@ function resolveCombat(a, b, opts) {
   const bToBlockVsARangedEW = (aEW && a.rangedType === 'missile') ? Math.max(0, bToBlockVsAAll - 0.10) : bToBlockVsAAll;
   const aToBlockVsBMelee   = bEW ? Math.max(0, aToBlockVsBAll - 0.10) : aToBlockVsBAll;
 
-  // Missile Immunity: defense set to 50/100 against missile ranged attacks only (not boulder/magic).
-  // Applied after armor piercing and weapon immunity.
-  // v1.31 bug: when both WI and MI apply to the same missile attack, WI overwrites MI
-  // (defense stays at 10 instead of 50). Fixed in v1.51+ (CP 1.60).
-  const isMissile = a.rangedType === 'missile';
-  const wiTriggeredOnMissile = isMissile && b.abilities && b.abilities.weaponImmunity
-    && aRangedWeaponForWI === 'normal' && a.unitType === 'normal';
-  if (isMissile && !(ver === 'mom_1.31' && wiTriggeredOnMissile)) {
-    bDefVsARanged = missileImmunityDef(bDefVsARanged, b.abilities, ver);
-  }
-
-  // Righteousness: defense set to 50/100 against Chaos-realm Ranged Magical Attack (magic_c).
-  // Nature/Sorcery magic ranged are unaffected.
-  if (a.rangedType === 'magic_c') {
-    bDefVsARanged = righteousnessDef(bDefVsARanged, b.abilities, ver);
-  }
-
-  // Magic Immunity: defense set to 50/100 against all magic ranged attacks.
-  if (a.rangedType === 'magic_c' || a.rangedType === 'magic_n' || a.rangedType === 'magic_s') {
-    bDefVsARanged = magicImmunityDef(bDefVsARanged, b.abilities, ver);
-  }
-
-  // Fire Immunity: defense set to 50/100 against fire breath (thrownType 'fire').
-  // Applied after armor piercing and weapon immunity (though breath is magical so WI never triggers).
-  if (a.thrownType === 'fire') {
-    bDefForThrown = fireImmunityDef(bDefForThrown, b.abilities, ver);
-  }
-
-  // Righteousness: defense set to 50/100 against Fire Breath and Lightning Breath
-  // (both are Chaos-realm special attacks).
-  if (a.thrownType === 'fire' || a.thrownType === 'lightning') {
-    bDefForThrown = righteousnessDef(bDefForThrown, b.abilities, ver);
-  }
-
-  // Magic Immunity: defense set to 50 against Fire Breath and Lightning Breath in MoM.
-  // CoM v2.3 removed this — breath attacks now bypass Magic Immunity in CoM/CoM2.
-  if ((a.thrownType === 'fire' || a.thrownType === 'lightning') && !(ver && ver.startsWith('com'))) {
-    bDefForThrown = magicImmunityDef(bDefForThrown, b.abilities, ver);
-  }
-
-  // Illusion: sets defender's defense to 0 (only city walls bonus survives).
-  // Applied after all other immunities. Negated by Illusion Immunity.
-  const aIllusion = !!(a.abilities && a.abilities.illusion);
-  const bIllusion = !!(b.abilities && b.abilities.illusion);
-  const aIllusionImmune = !!(a.abilities && a.abilities.illusionImmunity);
-  const bIllusionImmune = !!(b.abilities && b.abilities.illusionImmunity);
-  if (aIllusion && !bIllusionImmune) {
-    const bCW = b.cityWallBonus || 0;
-    bDefVsA = bCW;
-    bDefVsARanged = bCW;
-    bDefForThrown = bCW;
-    bDefForGaze = bCW;
-  }
-  if (bIllusion && !aIllusionImmune) {
-    aDefVsB = a.cityWallBonus || 0;
-    aDefForGaze = a.cityWallBonus || 0;
-  }
-
   // --- Immolation ---
   // Area fire damage: targets each defender figure independently (like fire breath).
   // Strength 4 (MoM) / 10 (CoM/CoM2). Fires like a touch attack with each attack phase.
-  // Magic Immunity raises defense to 50/100. Fire Immunity and Righteousness also raise
-  // defense to 50/100. Large Shield and AP apply.
+  // Defense vs immolation is computed in computeDefenseProfile (vsImmolation above).
   const aHasImm = !!(a.abilities && a.abilities.immolation);
   const bHasImm = !!(b.abilities && b.abilities.immolation);
   const immStr = (aHasImm || bHasImm) ? immolationStr(ver) : 0;
-  // Defense for immolation: base + Large Shield + Bless + AP → Magic Immunity → Fire Immunity → Righteousness → Illusion
-  let bDefForImm = righteousnessDef(fireImmunityDef(magicImmunityDef(bDefAPLSImm, b.abilities, ver), b.abilities, ver), b.abilities, ver);
-  let aDefForImm = righteousnessDef(fireImmunityDef(magicImmunityDef(aDefAPLSImm, a.abilities, ver), a.abilities, ver), a.abilities, ver);
-  if (aIllusion && !bIllusionImmune) bDefForImm = b.cityWallBonus || 0;
-  if (bIllusion && !aIllusionImmune) aDefForImm = a.cityWallBonus || 0;
 
   // --- Wall of Fire ---
   // Area Immolation damage to attacker A between gaze and melee. Not in ranged combat.
@@ -1336,49 +1340,27 @@ function resolveCombat(a, b, opts) {
                      isCoM2 ? woundedTopFigHP(bRemHP, b.hp) : undefined, aMinDamageFromHits))
       : [1];
 
-    // Poison Touch accompanies ranged attacks
-    const aPoisonStr = touchAttackFires(a.rtb, a.baseRtb, opts.version)
-      ? ((a.abilities && a.abilities.poison) || 0) : 0;
-    if (aPoisonStr > 0 && aAlive > 0 && bRemHP > 0) {
-      const pFail = poisonFailProb(b.res, b.abilities, opts.version);
-      if (pFail > 0) {
-        const poisonDist = calcResistDmgDist(aAlive * aPoisonStr, pFail, bRemHP);
-        dmgToB = convolveDists(dmgToB, poisonDist, bRemHP);
-      }
-    }
-
-    // Stoning Touch accompanies ranged attacks
-    const aStoningActive = a.abilities && a.abilities.stoningTouch != null
-      && touchAttackFires(a.rtb, a.baseRtb, opts.version);
-    if (aStoningActive && aAlive > 0 && bRemHP > 0) {
-      const pFail = stoningFailProb(bResStoning, b.abilities, a.abilities.stoningTouch, opts.version);
-      if (pFail > 0) {
-        const stoningDist = calcFigureKillDmgDist(aAlive, pFail, b.hp, bRemHP);
-        dmgToB = convolveDists(dmgToB, stoningDist, bRemHP);
-      }
-    }
-
-    // Life Steal accompanies ranged attacks
-    let aLifeStealDistR = null;
-    let aLifeStealExpectedR = 0;
-    const aLifeStealActive = a.abilities && a.abilities.lifeSteal != null
-      && touchAttackFires(a.rtb, a.baseRtb, opts.version);
-    if (aLifeStealActive && aAlive > 0 && bRemHP > 0) {
-      const lsMod = lifeStealEffective(bResDeath, b.abilities, a.abilities.lifeSteal, opts.version);
-      if (lsMod !== null) {
-        aLifeStealDistR = calcLifeStealDmgDist(aAlive, bResDeath, lsMod, bRemHP);
-        aLifeStealExpectedR = expectedDamage(aLifeStealDistR);
-        dmgToB = convolveDists(dmgToB, aLifeStealDistR, bRemHP);
-      }
-    }
-
-    // Immolation accompanies ranged attacks (MoM only; CoM/CoM2 removed this)
-    const aImmWithRanged = aHasImm && !immolationBlocksRanged(ver)
-      && touchAttackFires(a.rtb, a.baseRtb, opts.version);
-    if (aImmWithRanged && aAlive > 0 && bAlive > 0 && bRemHP > 0) {
-      const immDist = calcAreaDamageDist(bAlive, immStr, a.toHitImmolation, bDefForImm, bToBlockVsAAll, b.hp, bRemHP, bInvulnBonus, aMinDamageFromHits);
-      dmgToB = convolveDists(dmgToB, immDist, bRemHP);
-    }
+    // Touch attacks accompanying ranged: Poison, Stoning, Life Steal, Immolation (MoM only).
+    const rangedTouchFires = touchAttackFires(a.rtb, a.baseRtb, opts.version);
+    const aPoisonStrR = rangedTouchFires ? ((a.abilities && a.abilities.poison) || 0) : 0;
+    const aPoisonFailR = aPoisonStrR > 0 ? poisonFailProb(b.res, b.abilities, opts.version) : 0;
+    const aStoningFailR = (rangedTouchFires && a.abilities && a.abilities.stoningTouch != null)
+      ? stoningFailProb(bResStoning, b.abilities, a.abilities.stoningTouch, opts.version) : 0;
+    const aLifeStealModR = (rangedTouchFires && a.abilities && a.abilities.lifeSteal != null)
+      ? lifeStealEffective(bResDeath, b.abilities, a.abilities.lifeSteal, opts.version) : null;
+    const aImmWithRanged = aHasImm && !immolationBlocksRanged(ver) && rangedTouchFires;
+    const aImmDistR = (aImmWithRanged && aAlive > 0 && bAlive > 0 && bRemHP > 0)
+      ? calcAreaDamageDist(bAlive, immStr, a.toHitImmolation, bDefForImm, bToBlockVsAAll, b.hp, bRemHP, bInvulnBonus, aMinDamageFromHits)
+      : null;
+    const tR = convolveTouchAttacks(dmgToB, bRemHP, aAlive, {
+      poisonStr: aPoisonStrR, poisonFail: aPoisonFailR,
+      stoningFail: aStoningFailR, targetHP: b.hp,
+      lifeStealMod: aLifeStealModR, lifeStealRes: bResDeath,
+      immDist: aImmDistR,
+    });
+    dmgToB = tR.dist;
+    let aLifeStealDistR = tR.lifeStealDist;
+    let aLifeStealExpectedR = tR.lifeStealEV;
 
     // Haste doubles ranged attacks, EXCEPT mana-pool magic ranged in MoM (Caster ability
     // skips doubling). In CoM/CoM2, ranged never spends mana so Caster does not suppress
@@ -1507,29 +1489,21 @@ function resolveCombat(a, b, opts) {
                      isCoM2 ? woundedTopFigHP(bRemHP, b.hp) : undefined, aMinDamageFromHits))
       : [1];
 
-    // Convolve attacker's touch attacks into thrown phase (simultaneous with thrown)
+    // Convolve attacker's touch attacks into thrown phase (simultaneous with thrown).
     const phase1HasPoison = aPoisonWithThrown && aAlive > 0 && bRemHP > 0;
     const phase1HasStoning = aStoningWithThrown && aAlive > 0 && bRemHP > 0;
     const phase1HasLifeSteal = aLifeStealWithThrown && aAlive > 0 && bRemHP > 0;
-    let phase1Dist = thrownDist;
-    if (phase1HasPoison) {
-      const poisonDist = calcResistDmgDist(aAlive * aPoisonStr, aPoisonFail, bRemHP);
-      phase1Dist = convolveDists(phase1Dist, poisonDist, bRemHP);
-    }
-    if (phase1HasStoning) {
-      const stoningDist = calcFigureKillDmgDist(aAlive, aStoningFail, b.hp, bRemHP);
-      phase1Dist = convolveDists(phase1Dist, stoningDist, bRemHP);
-    }
-    if (phase1HasLifeSteal) {
-      const lsDist = calcLifeStealDmgDist(aAlive, bResDeath, aLifeStealMod, bRemHP);
-      phase1Dist = convolveDists(phase1Dist, lsDist, bRemHP);
-    }
-    // Immolation with thrown: targets all defender figures (area damage)
     const phase1HasImm = aImmWithThrown && aAlive > 0 && bAlive > 0 && bRemHP > 0;
-    if (phase1HasImm) {
-      const immDist = calcAreaDamageDist(bAlive, immStr, a.toHitImmolation, bDefForImm, bToBlockVsAAll, b.hp, bRemHP, bInvulnBonus, aMinDamageFromHits);
-      phase1Dist = convolveDists(phase1Dist, immDist, bRemHP);
-    }
+    const phase1ImmDist = phase1HasImm
+      ? calcAreaDamageDist(bAlive, immStr, a.toHitImmolation, bDefForImm, bToBlockVsAAll, b.hp, bRemHP, bInvulnBonus, aMinDamageFromHits)
+      : null;
+    const tP1 = convolveTouchAttacks(thrownDist, bRemHP, aAlive, {
+      poisonStr: phase1HasPoison ? aPoisonStr : 0, poisonFail: aPoisonFail,
+      stoningFail: phase1HasStoning ? aStoningFail : 0, targetHP: b.hp,
+      lifeStealMod: phase1HasLifeSteal ? aLifeStealMod : null, lifeStealRes: bResDeath,
+      immDist: phase1ImmDist,
+    });
+    let phase1Dist = tP1.dist;
     // Haste doubles thrown/breath damage (+ all touch attacks + immolation already folded in).
     if (aHaste && aAlive > 0 && a.rtb > 0 && bRemHP > 0) {
       phase1Dist = convolveDists(phase1Dist, phase1Dist, bRemHP);
@@ -1550,7 +1524,7 @@ function resolveCombat(a, b, opts) {
     let pDestroyBAfterAGaze = 0; // P(B destroyed after thrown + A-gaze)
     let pDestroyAAfterWof1 = 0;  // P(A destroyed after B-gaze + WoF)
     let pDestroyBAfterFS1 = 0;   // P(B destroyed after thrown + A-gaze + FS) [FS path only]
-    let aLifeStealExpectedT = phase1HasLifeSteal ? expectedDamage(calcLifeStealDmgDist(aAlive, bResDeath, aLifeStealMod, bRemHP)) : 0;
+    let aLifeStealExpectedT = tP1.lifeStealEV;
     let bLifeStealExpectedT = 0;
     if (aHaste && aAlive > 0 && a.rtb > 0 && bRemHP > 0) aLifeStealExpectedT *= 2;
 
@@ -1571,23 +1545,17 @@ function resolveCombat(a, b, opts) {
         : [1];
       // A's touch attacks fire simultaneously with A's gaze
       if (aAlive > 0 && bAliveAfterP1 > 0 && bRemHPAfterP1 > 0) {
-        if (aImmWithGaze) {
-          aGazeDist = convolveDists(aGazeDist,
-            calcAreaDamageDist(bAliveAfterP1, immStr, a.toHitImmolation, bDefForImm, bToBlockVsAAll, b.hp, bRemHPAfterP1, bInvulnBonus, aMinDamageFromHits), bRemHPAfterP1);
-        }
-        if (aPoisonWithGaze) {
-          aGazeDist = convolveDists(aGazeDist,
-            calcResistDmgDist(aAlive * aPoisonStr, aPoisonFail, bRemHPAfterP1), bRemHPAfterP1);
-        }
-        if (aStoningWithGaze) {
-          aGazeDist = convolveDists(aGazeDist,
-            calcFigureKillDmgDist(aAlive, aStoningFail, b.hp, bRemHPAfterP1), bRemHPAfterP1);
-        }
-        if (aLifeStealWithGaze) {
-          aLifeStealExpectedT += pPhase1 * expectedDamage(calcLifeStealDmgDist(aAlive, bResDeath, aLifeStealMod, bRemHPAfterP1));
-          aGazeDist = convolveDists(aGazeDist,
-            calcLifeStealDmgDist(aAlive, bResDeath, aLifeStealMod, bRemHPAfterP1), bRemHPAfterP1);
-        }
+        const aGazeImmDist = aImmWithGaze
+          ? calcAreaDamageDist(bAliveAfterP1, immStr, a.toHitImmolation, bDefForImm, bToBlockVsAAll, b.hp, bRemHPAfterP1, bInvulnBonus, aMinDamageFromHits)
+          : null;
+        const tAG = convolveTouchAttacks(aGazeDist, bRemHPAfterP1, aAlive, {
+          poisonStr: aPoisonWithGaze ? aPoisonStr : 0, poisonFail: aPoisonFail,
+          stoningFail: aStoningWithGaze ? aStoningFail : 0, targetHP: b.hp,
+          lifeStealMod: aLifeStealWithGaze ? aLifeStealMod : null, lifeStealRes: bResDeath,
+          immDist: aGazeImmDist,
+        });
+        aGazeDist = tAG.dist;
+        aLifeStealExpectedT += pPhase1 * tAG.lifeStealEV;
       }
 
       for (let aGzDmg = 0; aGzDmg < aGazeDist.length; aGzDmg++) {
@@ -2060,23 +2028,17 @@ function resolveCombat(a, b, opts) {
             isCoM2 ? woundedTopFigHP(bRemHP, b.hp) : undefined, bBlackSleep, bToBlockVsAAll, aMinDamageFromHits)
         : [1];
       if (aAlive > 0 && bAlive > 0 && bRemHP > 0) {
-        if (aImmWithGazeM) {
-          aGazeDist = convolveDists(aGazeDist,
-            calcAreaDamageDist(bAlive, immStr, a.toHitImmolation, bDefForImm, bToBlockVsAAll, b.hp, bRemHP, bInvulnBonus, aMinDamageFromHits), bRemHP);
-        }
-        if (aPoisonWithGazeM) {
-          aGazeDist = convolveDists(aGazeDist,
-            calcResistDmgDist(aAlive * aPoisonStrG, aPoisonFailG, bRemHP), bRemHP);
-        }
-        if (aStoningWithGazeM) {
-          aGazeDist = convolveDists(aGazeDist,
-            calcFigureKillDmgDist(aAlive, aStoningFailG, b.hp, bRemHP), bRemHP);
-        }
-        if (aLifeStealWithGazeM) {
-          aLifeStealExpectedM += expectedDamage(calcLifeStealDmgDist(aAlive, bResDeath, aLifeStealModG, bRemHP));
-          aGazeDist = convolveDists(aGazeDist,
-            calcLifeStealDmgDist(aAlive, bResDeath, aLifeStealModG, bRemHP), bRemHP);
-        }
+        const aGazeImmDistM = aImmWithGazeM
+          ? calcAreaDamageDist(bAlive, immStr, a.toHitImmolation, bDefForImm, bToBlockVsAAll, b.hp, bRemHP, bInvulnBonus, aMinDamageFromHits)
+          : null;
+        const tAGM = convolveTouchAttacks(aGazeDist, bRemHP, aAlive, {
+          poisonStr: aPoisonWithGazeM ? aPoisonStrG : 0, poisonFail: aPoisonFailG,
+          stoningFail: aStoningWithGazeM ? aStoningFailG : 0, targetHP: b.hp,
+          lifeStealMod: aLifeStealWithGazeM ? aLifeStealModG : null, lifeStealRes: bResDeath,
+          immDist: aGazeImmDistM,
+        });
+        aGazeDist = tAGM.dist;
+        aLifeStealExpectedM += tAGM.lifeStealEV;
       }
 
       const wofOnlyToA2 = wallOfFireActive ? new Array(aRemHP + 1).fill(0) : null;

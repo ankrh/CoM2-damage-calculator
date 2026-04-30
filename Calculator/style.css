@@ -692,10 +692,9 @@ h1 {
 .realm-chaos { color: orange;  font-weight: bold; }
 
 /* Panel background by effective unit realm */
-.panel.panel-realm-life     { background: #323232; --field-bg: color-mix(in srgb, #5f5f5f 65%, black); }
-.panel.panel-realm-nature   { background: #1D3317; --field-bg: color-mix(in srgb, #1D3317 65%, black); }
-.panel.panel-realm-sorcery  { background: #171D33; --field-bg: color-mix(in srgb, #171D33 65%, black); }
-.panel.panel-realm-chaos    { background: #490000; --field-bg: color-mix(in srgb, #490000 65%, black); }
-.panel.panel-realm-death    { background: #420039; --field-bg: color-mix(in srgb, #420039 65%, black); }
-.panel.panel-realm-arcane   { background: #513305; --field-bg: color-mix(in srgb, #513305 65%, black); }
-.panel.panel-realm-normal   { background: #202020; --field-bg: color-mix(in srgb, #202020 65%, black); }
+.panel.panel-realm-life     { background: #4f4f4f; --field-bg: color-mix(in srgb, #4f4f4f 65%, black); }
+.panel.panel-realm-nature   { background: #2f5225; --field-bg: color-mix(in srgb, #2f5225 65%, black); }
+.panel.panel-realm-sorcery  { background: #172b70; --field-bg: color-mix(in srgb, #172b70 65%, black); }
+.panel.panel-realm-chaos    { background: #671212; --field-bg: color-mix(in srgb, #671212 65%, black); }
+.panel.panel-realm-death    { background: #520047; --field-bg: color-mix(in srgb, #520047 65%, black); }
+.panel.panel-realm-arcane   { background: #6a440b; --field-bg: color-mix(in srgb, #6a440b 65%, black); }
