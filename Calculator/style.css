@@ -417,7 +417,7 @@ h1 {
   font-size: 0.9rem;
   margin-top: 0.3rem;
 }
-.enchant-row select, .enchant-row-select {
+.enchant-row select, .enchant-row-select, .enchant-row input[type="number"] {
   padding: 0.35rem 0.5rem;
   border: 1px solid var(--border);
   border-radius: 4px;
@@ -425,6 +425,10 @@ h1 {
   color: var(--text);
   font-size: 0.9rem;
   text-align: left;
+}
+.enchant-row input[type="number"] {
+  width: 4rem;
+  text-align: center;
 }
 .check-label {
   display: flex;

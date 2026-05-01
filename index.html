@@ -33,13 +33,31 @@
 <div class="main-content">
 <div class="combat-enchantments">
   <div class="enchant-row">
-    <label class="abil-check" data-tooltip="True Light (MoM 1.31 & 1.60 only): Life fantastic units +1 mel/rng/def/res; Death units &#8722;1.&#10;Darkness: Death fantastic units +1 mel/rng/def/res; Life units &#8722;1.&#10;Neither/Both: Neither is cast, or both cancel out."><span class="realm-life">True Light</span>/<span class="realm-death">Darkness</span>:
-      <select id="enchLightDark" class="enchant-row-select">
-        <option value="none" selected>Neither/Both</option>
-        <option value="trueLight">True Light</option>
-        <option value="darkness">Darkness</option>
-      </select>
+    <label class="check-label" data-tooltip="MoM 1.31 &amp; 1.60 only. Life fantastic units get +1 mel/rng/def/res; Death units get &#8722;1.">
+      <input type="checkbox" id="trueLight"> <span class="realm-life">True Light</span>
     </label>
+    <label class="check-label" data-tooltip="Death fantastic units get +1 mel/rng/def/res; Life units get &#8722;1. Can be active alongside True Light, canceling its matching modifiers.">
+      <input type="checkbox" id="darkness"> <span class="realm-death">Darkness</span>
+    </label>
+    <label class="check-label" data-tooltip="Area fire attack on all attacker figures, firing before the melee phase.&#10;MoM 1.31 &amp; 1.60: Strength 5.&#10;CoM 1 &amp; 2: Strength 10.&#10;Immune: Fire Immunity, Magic Immunity, Righteousness.">
+      <input type="checkbox" id="wallOfFire"> <span class="realm-chaos">Wall of Fire</span>
+    </label>
+    <label class="check-label" data-tooltip="All non-Chaos units get &#8722;20% To Hit.">
+      <input type="checkbox" id="warpReality"> <span class="realm-chaos">Warp Reality</span>
+    </label>
+    <span class="field-group">
+      <label for="chaosSurge" data-tooltip="Global enchantment. MoM: Chaos creatures gain +2 to attack strengths, non-stacking. CoM/CoM2: Chaos creatures gain +3 melee, +2 ranged/breath, and +2 resistance from the first copy. Each additional copy adds +1 to those bonuses."><span class="realm-chaos">Chaos Surge enchantments</span>:</label>
+      <input type="number" id="chaosSurge" min="0" max="99" value="0">
+    </span>
+  </div>
+  <div class="enchant-row" style="justify-content: center; gap: 1.5rem;">
+    <label id="rangedCheckLabel" class="check-label" data-tooltip="Sets combat mode to ranged. Only available if the attacker has a ranged attack.">
+      <input type="checkbox" id="rangedCheck" checked> Ranged attack
+    </label>
+    <span class="field-group" id="rangedDistLabel">
+      <label for="rangedDist" data-tooltip="Missile and boulder only. Magic ranged ignores distance.&#10;MoM 1.31 &amp; 1.60: &#8722;10/&#8722;20/&#8722;30% at 3/6/9 tiles.&#10;CoM 1: &#8722;10/&#8722;20/&#8722;30% at 4/8/12 tiles.&#10;CoM 2: &#8722;10% at 4 tiles, then &#8722;3% per additional tile.&#10;Long Range caps penalty at &#8722;10%.">Ranged attack distance:</label>
+      <input type="number" id="rangedDist" min="1" max="99" value="1">
+    </span>
     <span class="field-group">
       <label for="cityWalls" data-tooltip="Defense bonus applied to the defender only.&#10;MoM 1.31: Intact city wall: +3 def. Destroyed city wall or inner area: +1 def.&#10;MoM 1.60, CoM 1 &amp; 2: Intact city wall or inner area: +3 def. Destroyed city wall: +1 def.">City walls:</label>
       <select id="cityWalls">
@@ -56,21 +74,6 @@
         <option value="sorcery">Sorcery</option>
       </select>
     </label>
-    <label class="check-label" data-tooltip="Area fire attack on all attacker figures, firing before the melee phase.&#10;MoM 1.31 &amp; 1.60: Strength 5.&#10;CoM 1 &amp; 2: Strength 10.&#10;Immune: Fire Immunity, Magic Immunity, Righteousness.">
-      <input type="checkbox" id="wallOfFire"> <span class="realm-chaos">Wall of Fire</span>
-    </label>
-    <label class="check-label" data-tooltip="All non-Chaos units get &#8722;20% To Hit.">
-      <input type="checkbox" id="warpReality"> <span class="realm-chaos">Warp Reality</span>
-    </label>
-  </div>
-  <div class="enchant-row" style="justify-content: center; gap: 1.5rem;">
-    <label id="rangedCheckLabel" class="check-label" data-tooltip="Sets combat mode to ranged. Only available if the attacker has a ranged attack.">
-      <input type="checkbox" id="rangedCheck" checked> Ranged attack
-    </label>
-    <span class="field-group" id="rangedDistLabel">
-      <label for="rangedDist" data-tooltip="Missile and boulder only. Magic ranged ignores distance.&#10;MoM 1.31 &amp; 1.60: &#8722;10/&#8722;20/&#8722;30% at 3/6/9 tiles.&#10;CoM 1: &#8722;10/&#8722;20/&#8722;30% at 4/8/12 tiles.&#10;CoM 2: &#8722;10% at 4 tiles, then &#8722;3% per additional tile.&#10;Long Range caps penalty at &#8722;10%.">Ranged attack distance:</label>
-      <input type="number" id="rangedDist" min="1" max="99" value="1">
-    </span>
   </div>
 </div>
 
@@ -293,12 +296,13 @@
 </div><!-- /main-content -->
 </div><!-- /page-layout -->
 
-<!-- Load order: units (data blobs) -> data (constants) -> engine (math) -> combat (logic) -> ui (DOM) -->
+<!-- Load order: units (data blobs) -> data (constants) -> engine (math) -> combat/stats (logic) -> ui (DOM) -->
 <div id="tt" class="tt"></div>
 <script src="Calculator/units.js"></script>
 <script src="Calculator/data.js"></script>
 <script src="Calculator/engine.js"></script>
 <script src="Calculator/combat.js"></script>
+<script src="Calculator/stats.js"></script>
 <script src="Calculator/ui.js"></script>
 </body>
 </html>

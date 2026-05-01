@@ -26,4 +26,30 @@ does animate dead give +ranged attack?
 
 does "ranged" typically include thrown and breath?
 
-better UI layout
+land linking
+
+
+
+
+Questions for the experts:
+- I found various discrepancies between the numbers in the CoM2 manual and the UNITS.INI file. Would it be of interest for me to compile a list of these?
+
+- Chaos Spawn has both a melee attack and doom gaze attack. Is poison touch attached to only one of those, and if so, which? Or is it attached to both so poison activates twice in each attack sequence?
+
+- When I look at the MoM and CoM1 data using MoMTweaker, it seems like gaze attack type and values are stored in the same field as ranged, thrown and breath. Is this a fundamental property of how the game engine treats gaze, specifically, that gaze could never occur alongside ranged, thrown, or breath? If so, it might make sense for me to merge gaze into the ranged/thrown/breath field in my calculator as well.
+
+- Related to the above: With blazing eyes, can a unit have doom gaze at the same time as ranged attacks?
+
+- When the CoM2 manual or help text states "+X attack", is it synonymous with "+X melee attack"?
+
+- Similarly for "+X ranged"; which attack types does that include? Missile/boulder/magical/thrown/breath/gaze?
+
+- The wiki page on Warp Reality states that to hit can be reduced to 0%, but the to hit wiki page says to hit can't go below 10%. Which is correct, and is there any version difference as far as the minimum to hit chance?
+
+- Seravy mentions some new defense formulas in this post: https://www.realmsbeyond.net/forums/showthread.php?tid=8106&pid=645212#pid645212 Is this in the current versions of CoM or CoM2?
+
+- Does destiny remove the buff from magical/mithril/adamantium weapons?
+
+- The CoM2 help text states that Land Linking gives +2 breath, but the CoM2 and CoM1 manuals do not mention a modifier to breath.
+
+- The CoM2 help text says that the darkness granted by eternal night is twice as effective as regular darkness, but the CoM and CoM2 manuals do not mention this.

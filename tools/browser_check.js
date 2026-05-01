@@ -4,7 +4,7 @@ const path = require('path');
 const { spawn } = require('child_process');
 
 const repoRoot = path.resolve(__dirname, '..');
-const targetPath = '/Calculator/index.html';
+const targetPath = '/index.html';
 const chromePath = process.env.CHROME_PATH || 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 
 function sleep(ms) {
@@ -116,7 +116,7 @@ async function waitForTarget(targetUrl, debugPort, chrome, timeoutMs = 15000) {
       const pages = await res.json();
       const page = pages.find(p =>
         p.webSocketDebuggerUrl &&
-        (p.url === targetUrl || p.url.startsWith(targetUrl) || p.url.includes('/Calculator/index.html'))
+        (p.url === targetUrl || p.url.startsWith(targetUrl) || p.url.includes(targetPath))
       );
       if (page && page.webSocketDebuggerUrl) return page.webSocketDebuggerUrl;
     } catch (_) {
@@ -183,8 +183,12 @@ async function cdpEvaluate(wsUrl, expression) {
       ws.close();
       if (msg.result && msg.result.exceptionDetails) {
         const details = msg.result.exceptionDetails;
-        const description = msg.result.result && (msg.result.result.description || msg.result.result.value);
-        reject(new Error(description || details.text || 'CDP evaluation failed'));
+        const exception = details.exception || {};
+        const description = exception.description
+          || exception.value
+          || details.text
+          || describeError(details);
+        reject(new Error(description));
         return;
       }
       resolve(msg.result?.result?.value);
