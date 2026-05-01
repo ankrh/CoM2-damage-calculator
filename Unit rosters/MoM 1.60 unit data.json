@@ -3449,9 +3449,10 @@
     "resist": 14,
     "hp": 25,
     "melee": 20,
-    "ranged": 20,
     "to_hit": 30,
     "moves": 4,
+    "thrown_breath_type": "lightning",
+    "thrown_breath": 20,
     "abilities": [
       "Flight",
       "Fantastic",

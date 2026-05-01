@@ -2284,8 +2284,9 @@
     "resist": 12,
     "hp": 20,
     "melee": 10,
-    "ranged": 5,
     "moves": 2,
+    "thrown_breath_type": "lightning",
+    "thrown_breath": 5,
     "cost": 100,
     "upkeep": 1
   },
@@ -3710,9 +3711,10 @@
     "resist": 14,
     "hp": 30,
     "melee": 28,
-    "ranged": 21,
     "to_hit": 30,
     "moves": 4,
+    "thrown_breath_type": "lightning",
+    "thrown_breath": 21,
     "abilities": [
       "Flight",
       "Fantastic",

@@ -50,6 +50,11 @@ h1 {
   font-size: 0.9rem;
   color: var(--muted);
 }
+.feedback-link {
+  font-size: 0.9rem;
+  color: var(--text);
+  margin-left: 0.75rem;
+}
 .version-bar select {
   padding: 0.35rem 0.5rem;
   border: 1px solid var(--border);

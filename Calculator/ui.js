@@ -794,6 +794,16 @@ function renderDistPanel(container, title, dist, hp, numFigs, opts) {
 
   html += '</tbody></table></div>';
   container.innerHTML = html;
+
+  // Scroll so the mean damage row is vertically centred in the visible scroll area.
+  const scrollEl = container.querySelector('.dist-scroll');
+  const rows = scrollEl ? scrollEl.querySelectorAll('tbody tr') : [];
+  const meanRow = rows[Math.round(expected)];
+  if (scrollEl && meanRow) {
+    const scrollRect = scrollEl.getBoundingClientRect();
+    const rowRect = meanRow.getBoundingClientRect();
+    scrollEl.scrollTop += rowRect.top - scrollRect.top - scrollEl.clientHeight / 2 + meanRow.offsetHeight / 2;
+  }
 }
 
 function renderBreakdownGrid(phases) {
@@ -1443,4 +1453,19 @@ document.querySelectorAll('.abil-item').forEach(item => {
     drawer.classList.contains('open') ? close() : open();
   });
   overlay.addEventListener('click', close);
+})();
+
+// Default matchup on page load
+(function() {
+  const version = document.getElementById('gameVersion').value;
+  const db = loadUnitDatabase(version);
+  function pickUnit(prefix, name) {
+    const match = db.find(u => u.name === name);
+    if (!match) return;
+    document.getElementById(prefix + 'Unit').value = String(match.id);
+    syncUnitDisplay(prefix);
+    document.getElementById(prefix + 'Unit').dispatchEvent(new Event('change'));
+  }
+  pickUnit('a', 'Hell Hounds');
+  pickUnit('b', 'War Bears');
 })();

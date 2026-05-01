@@ -34,6 +34,9 @@ def parse_ranged_type(ranged_type_str: str) -> dict:
     if 'Fire Breath' in ranged_type_str:
         result['breath_type'] = 'fire'
         return result
+    if 'Lightning Breath' in ranged_type_str:
+        result['breath_type'] = 'lightning'
+        return result
     # Ranged types — check magic school name first
     if 'Chaos' in ranged_type_str:
         result['ranged_type'] = 'Magic(C)'
